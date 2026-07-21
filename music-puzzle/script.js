@@ -5,172 +5,259 @@
   if (!config) throw new Error("SONG_CONFIG is missing");
 
   const NS = "http://www.w3.org/2000/svg";
-  const scoreSvg = document.getElementById("scoreSvg");
+  const score = document.getElementById("score");
   const piano = document.getElementById("piano");
   const statusText = document.getElementById("statusText");
 
   document.getElementById("gameTitle").textContent = config.title;
   document.getElementById("gameSubtitle").textContent = config.subtitle;
 
-  const SOLFEGE = { C:"דו", D:"רה", E:"מי", F:"פה", G:"סול", A:"לה", B:"סי" };
-  const WHITE_NOTES = ["C4","D4","E4","F4","G4","A4","B4"];
+  const SOLFEGE = {
+    C: "דו", D: "רה", E: "מי", F: "פה",
+    G: "סול", A: "לה", B: "סי"
+  };
+
+  const WHITE_NOTES = ["C4", "D4", "E4", "F4", "G4", "A4", "B4"];
   const BLACK_NOTES = [
-    { note:"Cs4", after:1 },
-    { note:"Ds4", after:2 },
-    { note:"Fs4", after:4 },
-    { note:"Gs4", after:5 },
-    { note:"As4", after:6 }
+    { note: "Cs4", after: 1 },
+    { note: "Ds4", after: 2 },
+    { note: "Fs4", after: 4 },
+    { note: "Gs4", after: 5 },
+    { note: "As4", after: 6 }
   ];
-  const DIATONIC_INDEX = { C:0, D:1, E:2, F:3, G:4, A:5, B:6 };
+
+  const DIATONIC_INDEX = {
+    C: 0, D: 1, E: 2, F: 3, G: 4, A: 5, B: 6
+  };
+
   const audioCache = new Map();
-  const scoreGroups = [];
+  const renderedNotes = [];
+  const renderedDots = [];
   let progressIndex = 0;
 
+  function svgEl(name, attrs = {}) {
+    const el = document.createElementNS(NS, name);
+    Object.entries(attrs).forEach(([key, value]) => {
+      el.setAttribute(key, value);
+    });
+    return el;
+  }
+
   function parseNote(note) {
-    const normalized = note.replace("s","#");
+    const normalized = note.replace("s", "#");
     const match = /^([A-G])(#?)(\d+)$/.exec(normalized);
-    if (!match) throw new Error(`Invalid note: ${note}`);
-    return { letter:match[1], accidental:match[2], octave:Number(match[3]) };
+
+    if (!match) {
+      throw new Error(`Invalid note: ${note}`);
+    }
+
+    return {
+      letter: match[1],
+      accidental: match[2],
+      octave: Number(match[3])
+    };
   }
 
   function colorFor(note) {
     return config.noteColors[parseNote(note).letter];
   }
 
-  function svgEl(name, attrs={}) {
-    const el = document.createElementNS(NS,name);
-    Object.entries(attrs).forEach(([key,value]) => el.setAttribute(key,value));
-    return el;
-  }
-
   function staffStep(note) {
-    const n = parseNote(note);
-    return (n.octave - 4) * 7 + DIATONIC_INDEX[n.letter];
+    const parsed = parseNote(note);
+    return (parsed.octave - 4) * 7 + DIATONIC_INDEX[parsed.letter];
   }
 
-  function staffY(note) {
-    return 126 - staffStep(note) * 7;
+  function noteY(note) {
+    // E4 נמצא על הקו התחתון.
+    const e4Step = DIATONIC_INDEX.E;
+    return 120 - (staffStep(note) - e4Step) * 7;
   }
 
-  function drawLedgerLines(group,x,y) {
-    if (y > 126) {
-      for (let lineY=140; lineY<=y+1; lineY+=14) {
-        group.appendChild(svgEl("line",{
-          x1:x-15,y1:lineY,x2:x+15,y2:lineY,class:"staff-line"
+  function addLedgerLines(group, x, y) {
+    if (y >= 134) {
+      for (let lineY = 134; lineY <= y + 1; lineY += 14) {
+        group.appendChild(svgEl("line", {
+          x1: x - 15,
+          y1: lineY,
+          x2: x + 15,
+          y2: lineY,
+          stroke: "#1b1a18",
+          "stroke-width": 1.8
         }));
       }
     }
 
-    if (y < 70) {
-      for (let lineY=56; lineY>=y-1; lineY-=14) {
-        group.appendChild(svgEl("line",{
-          x1:x-15,y1:lineY,x2:x+15,y2:lineY,class:"staff-line"
+    if (y <= 64) {
+      for (let lineY = 64; lineY >= y - 1; lineY -= 14) {
+        group.appendChild(svgEl("line", {
+          x1: x - 15,
+          y1: lineY,
+          x2: x + 15,
+          y2: lineY,
+          stroke: "#1b1a18",
+          "stroke-width": 1.8
         }));
       }
     }
   }
 
-  function drawNote(group,x,y,duration) {
-    drawLedgerLines(group,x,y);
+  function drawQuarterNote(parent, x, y, index) {
+    const group = svgEl("g", {
+      class: "vf-note",
+      "data-index": index
+    });
 
-    const stemUp = y >= 98;
-    const stemX = stemUp ? x+8 : x-8;
-    const stemEndY = stemUp ? y-43 : y+43;
+    addLedgerLines(group, x, y);
 
-    group.appendChild(svgEl("ellipse",{
-      cx:x,cy:y,rx:10.2,ry:7,
-      transform:`rotate(-20 ${x} ${y})`,
-      class:"note-head"
+    const stemUp = y >= 92;
+    const stemX = stemUp ? x + 8 : x - 8;
+    const stemEndY = stemUp ? y - 42 : y + 42;
+
+    group.appendChild(svgEl("ellipse", {
+      cx: x,
+      cy: y,
+      rx: 9.5,
+      ry: 6.6,
+      transform: `rotate(-18 ${x} ${y})`,
+      fill: "#161513"
     }));
 
-    group.appendChild(svgEl("line",{
-      x1:stemX,y1:y,x2:stemX,y2:stemEndY,
-      "stroke-width":3.6,class:"note-stem"
+    group.appendChild(svgEl("line", {
+      x1: stemX,
+      y1: y,
+      x2: stemX,
+      y2: stemEndY,
+      stroke: "#161513",
+      "stroke-width": 3.2,
+      "stroke-linecap": "round"
     }));
 
-    if (duration <= 0.5) {
-      const path = stemUp
-        ? `M ${stemX} ${stemEndY} C ${stemX+18} ${stemEndY+7}, ${stemX+18} ${stemEndY+22}, ${stemX+4} ${stemEndY+29}`
-        : `M ${stemX} ${stemEndY} C ${stemX-18} ${stemEndY-7}, ${stemX-18} ${stemEndY-22}, ${stemX-4} ${stemEndY-29}`;
-
-      group.appendChild(svgEl("path",{
-        d:path,"stroke-width":4.2,class:"note-flag"
-      }));
-    }
+    parent.appendChild(group);
+    renderedNotes.push(group);
   }
 
   function renderScore() {
-    scoreSvg.textContent = "";
-    scoreGroups.length = 0;
+    score.textContent = "";
+    renderedNotes.length = 0;
+    renderedDots.length = 0;
 
-    const width = Math.max(760,150 + config.melody.length * 63);
-    const height = 205;
+    const noteSpacing = 61;
+    const startX = 112;
+    const width = Math.max(720, startX + config.melody.length * noteSpacing + 45);
+    const height = 195;
 
-    scoreSvg.setAttribute("viewBox",`0 0 ${width} ${height}`);
+    score.style.width = `${width}px`;
 
-    for (let i=0;i<5;i++) {
-      scoreSvg.appendChild(svgEl("line",{
-        x1:24,y1:70+i*14,x2:width-24,y2:70+i*14,class:"staff-line"
+    const svg = svgEl("svg", {
+      viewBox: `0 0 ${width} ${height}`,
+      width,
+      height,
+      role: "img",
+      "aria-label": "תווי המנגינה"
+    });
+
+    // חמשת קווי החמשה
+    for (let i = 0; i < 5; i++) {
+      const y = 64 + i * 14;
+      svg.appendChild(svgEl("line", {
+        x1: 24,
+        y1: y,
+        x2: width - 24,
+        y2: y,
+        stroke: "#25231f",
+        "stroke-width": 1.7
       }));
     }
 
-    const [top,bottom] = config.timeSignature || [4,4];
-    const topText = svgEl("text",{x:62,y:94,class:"time-signature"});
-    const bottomText = svgEl("text",{x:62,y:128,class:"time-signature"});
+    // משקל
+    const [top, bottom] = config.timeSignature || [2, 4];
+
+    const topText = svgEl("text", {
+      x: 55,
+      y: 89,
+      "text-anchor": "middle",
+      "font-family": "Georgia, serif",
+      "font-size": 29,
+      "font-weight": 700,
+      fill: "#181715"
+    });
     topText.textContent = top;
+
+    const bottomText = svgEl("text", {
+      x: 55,
+      y: 121,
+      "text-anchor": "middle",
+      "font-family": "Georgia, serif",
+      "font-size": 29,
+      "font-weight": 700,
+      fill: "#181715"
+    });
     bottomText.textContent = bottom;
-    scoreSvg.append(topText,bottomText);
 
-    let x = 115;
+    svg.append(topText, bottomText);
 
-    config.melody.forEach((item,index) => {
-      const group = svgEl("g",{
-        class:"note-group",
-        "data-index":index,
-        "data-note":item.note
+    config.melody.forEach((item, index) => {
+      const x = startX + index * noteSpacing;
+      const y = noteY(item.note);
+
+      drawQuarterNote(svg, x, y, index);
+
+      const dot = svgEl("circle", {
+        cx: x,
+        cy: 164,
+        r: 8.5,
+        fill: colorFor(item.note),
+        stroke: "#fff",
+        "stroke-width": 2.5,
+        class: "note-color-dot",
+        style: `color:${colorFor(item.note)}`,
+        "data-index": index
       });
 
-      const y = staffY(item.note);
-      drawNote(group,x,y,item.duration || 1);
-
-      group.appendChild(svgEl("circle",{
-        cx:x,cy:171,r:8.5,
-        fill:colorFor(item.note),
-        class:"note-dot",
-        style:`color:${colorFor(item.note)}`
-      }));
-
-      scoreSvg.appendChild(group);
-      scoreGroups.push(group);
+      svg.appendChild(dot);
+      renderedDots.push(dot);
 
       if (item.measureEnd) {
-        scoreSvg.appendChild(svgEl("line",{
-          x1:x+31,y1:67,x2:x+31,y2:129,class:"bar-line"
+        svg.appendChild(svgEl("line", {
+          x1: x + noteSpacing / 2,
+          y1: 60,
+          x2: x + noteSpacing / 2,
+          y2: 124,
+          stroke: "#25231f",
+          "stroke-width": 1.8
         }));
       }
-
-      x += 63;
     });
 
-    scoreSvg.appendChild(svgEl("line",{
-      x1:width-31,y1:67,x2:width-31,y2:129,class:"bar-line"
+    svg.appendChild(svgEl("line", {
+      x1: width - 33,
+      y1: 60,
+      x2: width - 33,
+      y2: 124,
+      stroke: "#25231f",
+      "stroke-width": 1.8
     }));
 
-    scoreSvg.appendChild(svgEl("line",{
-      x1:width-24,y1:67,x2:width-24,y2:129,
-      class:"bar-line","stroke-width":4
+    svg.appendChild(svgEl("line", {
+      x1: width - 26,
+      y1: 60,
+      x2: width - 26,
+      y2: 124,
+      stroke: "#25231f",
+      "stroke-width": 4
     }));
 
+    score.appendChild(svg);
     updateCurrentNote();
   }
 
-  function createKey(note,type,left) {
+  function createKey(note, type, left) {
     const key = document.createElement("button");
     key.type = "button";
     key.className = `key ${type}`;
     key.dataset.note = note;
     key.style.left = left;
-    key.setAttribute("aria-label",note);
+    key.setAttribute("aria-label", note);
 
     if (type === "white") {
       const letter = parseNote(note).letter;
@@ -195,24 +282,28 @@
       key.classList.remove("is-active");
     };
 
-    key.addEventListener("pointerdown",press);
-    key.addEventListener("pointerup",release);
-    key.addEventListener("pointercancel",release);
-    key.addEventListener("pointerleave",release);
+    key.addEventListener("pointerdown", press);
+    key.addEventListener("pointerup", release);
+    key.addEventListener("pointercancel", release);
+    key.addEventListener("pointerleave", release);
 
     return key;
   }
 
   function renderPiano() {
     piano.textContent = "";
-    piano.style.setProperty("--white-count",7);
+    piano.style.setProperty("--white-count", 7);
 
-    WHITE_NOTES.forEach((note,index) => {
-      piano.appendChild(createKey(note,"white",`calc(${index} * (100% / 7))`));
+    WHITE_NOTES.forEach((note, index) => {
+      piano.appendChild(
+        createKey(note, "white", `calc(${index} * (100% / 7))`)
+      );
     });
 
     BLACK_NOTES.forEach(item => {
-      piano.appendChild(createKey(item.note,"black",`calc(${item.after} * (100% / 7))`));
+      piano.appendChild(
+        createKey(item.note, "black", `calc(${item.after} * (100% / 7))`)
+      );
     });
   }
 
@@ -222,7 +313,7 @@
     if (!audio) {
       audio = new Audio(`audio/${note}.wav`);
       audio.preload = "auto";
-      audioCache.set(note,audio);
+      audioCache.set(note, audio);
     }
 
     audio.pause();
@@ -235,23 +326,28 @@
     const expected = config.melody[progressIndex]?.note;
     if (!expected) return;
 
-    const normalizedNote = note.replace("s","#");
+    const normalizedNote = note.replace("s", "#");
 
     if (normalizedNote === expected) {
-      const group = scoreGroups[progressIndex];
-      group.classList.remove("is-current");
-      group.classList.add("is-playing");
+      const noteElement = renderedNotes[progressIndex];
+      const dot = renderedDots[progressIndex];
+
+      dot?.classList.remove("is-current");
+      noteElement?.classList.add("is-playing");
+      dot?.classList.add("is-playing");
 
       setTimeout(() => {
-        group.classList.remove("is-playing");
-        group.classList.add("is-done");
-      },300);
+        noteElement?.classList.remove("is-playing");
+        noteElement?.classList.add("is-done");
+        dot?.classList.remove("is-playing");
+        dot?.classList.add("is-done");
+      }, 300);
 
       progressIndex++;
 
       if (progressIndex >= config.melody.length) {
         statusText.textContent = "כל הכבוד! ניגנתם את המנגינה";
-        setTimeout(resetGame,1800);
+        setTimeout(resetGame, 1800);
       } else {
         updateCurrentNote();
       }
@@ -262,39 +358,43 @@
         if (progressIndex < config.melody.length) {
           statusText.textContent = "לחצו על הקלידים לפי סדר התווים";
         }
-      },900);
+      }, 900);
     }
   }
 
   function updateCurrentNote() {
-    scoreGroups.forEach((group,index) => {
-      group.classList.toggle("is-current",index === progressIndex);
+    renderedDots.forEach((dot, index) => {
+      dot.classList.toggle("is-current", index === progressIndex);
     });
 
-    scoreGroups[progressIndex]?.scrollIntoView({
-      behavior:"smooth",
-      block:"nearest",
-      inline:"center"
+    renderedDots[progressIndex]?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "center"
     });
   }
 
   function resetGame() {
     progressIndex = 0;
 
-    scoreGroups.forEach(group => {
-      group.classList.remove("is-playing","is-done","is-current");
+    renderedDots.forEach(dot => {
+      dot.classList.remove("is-playing", "is-done", "is-current");
+    });
+
+    renderedNotes.forEach(note => {
+      note.classList.remove("is-playing", "is-done");
     });
 
     statusText.textContent = "לחצו על הקלידים לפי סדר התווים";
     updateCurrentNote();
   }
 
-  renderScore();
   renderPiano();
+  renderScore();
 
-  [...WHITE_NOTES,...BLACK_NOTES.map(item => item.note)].forEach(note => {
+  [...WHITE_NOTES, ...BLACK_NOTES.map(item => item.note)].forEach(note => {
     const audio = new Audio(`audio/${note}.wav`);
     audio.preload = "auto";
-    audioCache.set(note,audio);
+    audioCache.set(note, audio);
   });
 })();
