@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>חידת מנגינה</title>
+<style>
+:root {
+  --purple:#6f3aa5; --ink:#18345d; --paper:#fffaf1;
+  --do:#2563d4; --re:#4caf36; --mi:#f3bf19; --fa:#f26a22;
+  --sol:#8a4fb8; --la:#e8539a; --si:#28acd0;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0; min-height:100vh; padding:18px;
+  font-family:Arial,"Noto Sans Hebrew",sans-serif;
+  color:var(--ink);
+  background:radial-gradient(circle at 20% 5%,#fff,#fff9ef 58%,#f5ebdf);
+}
+.app { max-width:1180px; margin:auto; }
+header { text-align:center; margin-bottom:14px; }
+h1 { margin:0 0 8px; color:var(--purple); font-size:clamp(32px,5vw,58px); }
+.instruction { margin:0; font-size:clamp(19px,2.5vw,28px); font-weight:700; line-height:1.4; }
+.panel {
+  margin-top:16px; padding:14px; border-radius:24px;
+  border:1px solid #ead9c7; background:rgba(255,255,255,.82);
+  box-shadow:0 10px 28px rgba(60,40,20,.12);
+}
+.staff-scroll, .keyboard-scroll {
+  overflow:visible; direction:ltr;
+}
+.staff-svg { display:block; width:100%; height:auto; }
+.mobile-staff{display:none}
+.staff-line { stroke:#666; stroke-width:1.7; }
+.clef { font:120px serif; fill:#111; }
+.time { font:700 34px Arial; fill:#111; }
+.note-head { fill:#111; }
+.stem,.ledger { stroke:#111; stroke-width:3; }
+.flag { fill:none; stroke:#111; stroke-width:3; }
+.color-dot { stroke:#fff; stroke-width:2; }
+
+.piano {
+  direction:ltr; position:relative; display:flex;
+  width:100%; height:280px; overflow:hidden;
+  border:10px solid var(--purple); border-radius:22px;
+  background:#171717; box-shadow:0 10px 28px rgba(60,40,20,.18);
+  user-select:none; touch-action:manipulation;
+}
+.piano-key {
+  appearance:none; -webkit-appearance:none;
+  border-radius:0; box-shadow:none; margin:0; padding:0;
+  font-family:inherit;
+}
+.white-key {
+  position:relative; flex:1 1 14.285%; height:100%;
+  border:0; border-left:1px solid #aaa; border-right:1px solid #aaa;
+  border-bottom:8px solid #d7cec1;
+  background:linear-gradient(#fff,#f6f0e7);
+  color:#111; cursor:pointer; z-index:1;
+}
+.white-key.active {
+  background:linear-gradient(#eadcff,#f3eaff);
+  transform:translateY(4px); border-bottom-width:4px;
+}
+.key-label {
+  position:absolute; bottom:15px; left:0; right:0;
+  display:flex; flex-direction:column; align-items:center; gap:7px;
+  font-size:18px; font-weight:800; pointer-events:none;
+}
+.key-dot { width:28px; height:28px; border-radius:50%; }
+.black-key {
+  position:absolute; top:0; width:8.2%; height:58%; z-index:4;
+  border-radius:0 0 8px 8px;
+  background:linear-gradient(90deg,#090909,#363636,#090909);
+  border:2px solid #050505; box-shadow:0 5px 6px rgba(0,0,0,.45);
+  pointer-events:none;
+}
+.b1{left:10.2%}.b2{left:24.5%}.b3{left:53.1%}.b4{left:67.4%}.b5{left:81.7%}
+
+.controls { display:flex; justify-content:center; margin-top:14px; }
+.control-button {
+  border:1px solid #decceb; border-radius:999px;
+  padding:11px 22px; background:#fff; color:var(--purple);
+  font-size:18px; font-weight:800; cursor:pointer;
+  box-shadow:0 5px 15px rgba(70,40,90,.14);
+}
+.control-button:active { transform:translateY(2px); }
+.status { min-height:24px; text-align:center; margin-top:8px; font-weight:700; color:#66428d; }
+
+@media(max-width:700px) {
+  body{padding:10px}
+  .panel{padding:8px;border-radius:18px}
+  .piano{height:220px}
+  .white-key{flex-basis:82px}
+  .black-key{width:50px}
+}
+@media(orientation:landscape) and (max-height:520px) {
+  body{padding:6px}
+  h1{font-size:28px;margin-bottom:2px}
+  .instruction{font-size:15px}
+  .panel{margin-top:7px;padding:6px}
+  .staff-svg{min-width:760px}
+  .piano{height:160px;min-width:700px;border-width:7px}
+  .white-key{flex-basis:88px}
+  .key-label{bottom:7px;font-size:15px;gap:4px}
+  .key-dot{width:21px;height:21px}
+  .black-key{width:52px}
+}
+</style>
+</head>
+<body>
+<main class="app">
+<header>
+  <h1>נגנו את המנגינה</h1>
+  <p class="instruction">נגנו את המנגינה לפי התווים, וגלו את התחנה הבאה שלכם.</p>
+</header>
+
+<section class="panel">
+  <div class="staff-scroll">
+    <div class="desktop-staff"><svg class="staff-svg" viewBox="0 0 1060 260" role="img" aria-label="תווים למנגינה">
+<line x1="120" y1="76" x2="1025" y2="76" class="staff-line"/>
+<line x1="120" y1="96" x2="1025" y2="96" class="staff-line"/>
+<line x1="120" y1="116" x2="1025" y2="116" class="staff-line"/>
+<line x1="120" y1="136" x2="1025" y2="136" class="staff-line"/>
+<line x1="120" y1="156" x2="1025" y2="156" class="staff-line"/>
+<text x="22" y="162" class="clef">𝄞</text>
+<text x="91" y="108" class="time">2</text>
+<text x="91" y="150" class="time">4</text>
+<line x1="174.8" y1="156" x2="204.8" y2="156" class="ledger"/>
+<ellipse cx="189.8" cy="156" rx="10" ry="7" transform="rotate(-18 189.8 156)" class="note-head"/>
+<line x1="197.8" y1="156" x2="197.8" y2="110" class="stem"/>
+<path d="M 197.8 110 q 22 5 9 26" class="flag"/>
+<circle cx="189.8" cy="215" r="11" fill="#2563d4" class="color-dot"/>
+<ellipse cx="233.2" cy="106" rx="10" ry="7" transform="rotate(-18 233.2 106)" class="note-head"/>
+<line x1="241.2" y1="106" x2="241.2" y2="60" class="stem"/>
+<path d="M 241.2 60 q 22 5 9 26" class="flag"/>
+<circle cx="233.2" cy="215" r="11" fill="#e8539a" class="color-dot"/>
+<ellipse cx="298.5" cy="126" rx="10" ry="7" transform="rotate(-18 298.5 126)" class="note-head"/>
+<line x1="306.5" y1="126" x2="306.5" y2="80" class="stem"/>
+<circle cx="298.5" cy="215" r="11" fill="#f26a22" class="color-dot"/>
+<line x1="360" y1="76" x2="360" y2="156" stroke="#111" stroke-width="2"/>
+<line x1="394.8" y1="156" x2="424.8" y2="156" class="ledger"/>
+<ellipse cx="409.8" cy="156" rx="10" ry="7" transform="rotate(-18 409.8 156)" class="note-head"/>
+<line x1="417.8" y1="156" x2="417.8" y2="110" class="stem"/>
+<path d="M 417.8 110 q 22 5 9 26" class="flag"/>
+<circle cx="409.8" cy="215" r="11" fill="#2563d4" class="color-dot"/>
+<ellipse cx="453.2" cy="106" rx="10" ry="7" transform="rotate(-18 453.2 106)" class="note-head"/>
+<line x1="461.2" y1="106" x2="461.2" y2="60" class="stem"/>
+<path d="M 461.2 60 q 22 5 9 26" class="flag"/>
+<circle cx="453.2" cy="215" r="11" fill="#e8539a" class="color-dot"/>
+<ellipse cx="518.5" cy="126" rx="10" ry="7" transform="rotate(-18 518.5 126)" class="note-head"/>
+<line x1="526.5" y1="126" x2="526.5" y2="80" class="stem"/>
+<circle cx="518.5" cy="215" r="11" fill="#f26a22" class="color-dot"/>
+<line x1="580" y1="76" x2="580" y2="156" stroke="#111" stroke-width="2"/>
+<ellipse cx="629.8" cy="116" rx="10" ry="7" transform="rotate(-18 629.8 116)" class="note-head"/>
+<line x1="637.8" y1="116" x2="637.8" y2="70" class="stem"/>
+<path d="M 637.8 70 q 22 5 9 26" class="flag"/>
+<circle cx="629.8" cy="215" r="11" fill="#8a4fb8" class="color-dot"/>
+<ellipse cx="673.2" cy="106" rx="10" ry="7" transform="rotate(-18 673.2 106)" class="note-head"/>
+<line x1="681.2" y1="106" x2="681.2" y2="60" class="stem"/>
+<path d="M 681.2 60 q 22 5 9 26" class="flag"/>
+<circle cx="673.2" cy="215" r="11" fill="#e8539a" class="color-dot"/>
+<ellipse cx="716.8" cy="116" rx="10" ry="7" transform="rotate(-18 716.8 116)" class="note-head"/>
+<line x1="724.8" y1="116" x2="724.8" y2="70" class="stem"/>
+<path d="M 724.8 70 q 22 5 9 26" class="flag"/>
+<circle cx="716.8" cy="215" r="11" fill="#8a4fb8" class="color-dot"/>
+<ellipse cx="760.2" cy="126" rx="10" ry="7" transform="rotate(-18 760.2 126)" class="note-head"/>
+<line x1="768.2" y1="126" x2="768.2" y2="80" class="stem"/>
+<path d="M 768.2 80 q 22 5 9 26" class="flag"/>
+<circle cx="760.2" cy="215" r="11" fill="#f26a22" class="color-dot"/>
+<line x1="800" y1="76" x2="800" y2="156" stroke="#111" stroke-width="2"/>
+<ellipse cx="849.8" cy="136" rx="10" ry="7" transform="rotate(-18 849.8 136)" class="note-head"/>
+<line x1="857.8" y1="136" x2="857.8" y2="90" class="stem"/>
+<path d="M 857.8 90 q 22 5 9 26" class="flag"/>
+<circle cx="849.8" cy="215" r="11" fill="#f3bf19" class="color-dot"/>
+<ellipse cx="893.2" cy="146" rx="10" ry="7" transform="rotate(-18 893.2 146)" class="note-head"/>
+<line x1="901.2" y1="146" x2="901.2" y2="100" class="stem"/>
+<path d="M 901.2 100 q 22 5 9 26" class="flag"/>
+<circle cx="893.2" cy="215" r="11" fill="#4caf36" class="color-dot"/>
+<ellipse cx="936.8" cy="136" rx="10" ry="7" transform="rotate(-18 936.8 136)" class="note-head"/>
+<line x1="944.8" y1="136" x2="944.8" y2="90" class="stem"/>
+<path d="M 944.8 90 q 22 5 9 26" class="flag"/>
+<circle cx="936.8" cy="215" r="11" fill="#f3bf19" class="color-dot"/>
+<line x1="965.2" y1="156" x2="995.2" y2="156" class="ledger"/>
+<ellipse cx="980.2" cy="156" rx="10" ry="7" transform="rotate(-18 980.2 156)" class="note-head"/>
+<line x1="988.2" y1="156" x2="988.2" y2="110" class="stem"/>
+<path d="M 988.2 110 q 22 5 9 26" class="flag"/>
+<circle cx="980.2" cy="215" r="11" fill="#2563d4" class="color-dot"/>
+<line x1="1020" y1="76" x2="1020" y2="156" stroke="#111" stroke-width="5"/>
+</svg></div><div class="mobile-staff"><svg viewBox="0 0 560 225" class="staff-svg" role="img" aria-label="תווים למנגינה"><line x1="102" y1="60" x2="545" y2="60" class="staff-line"/><line x1="102" y1="80" x2="545" y2="80" class="staff-line"/><line x1="102" y1="100" x2="545" y2="100" class="staff-line"/><line x1="102" y1="120" x2="545" y2="120" class="staff-line"/><line x1="102" y1="140" x2="545" y2="140" class="staff-line"/><text x="17" y="146" class="clef">𝄞</text><text x="77" y="92" class="time">2</text><text x="77" y="134" class="time">4</text><line x1="150.1" y1="156" x2="178.1" y2="156" class="ledger"/><ellipse cx="164.1" cy="156" rx="9.5" ry="6.7" transform="rotate(-18 164.1 156)" class="note-head"/><line x1="172.1" y1="156" x2="172.1" y2="112" class="stem"/><path d="M 172.1 112 q 21 5 8 25" class="flag"/><circle cx="164.1" cy="185" r="9.5" fill="#2563d4" class="color-dot"/><ellipse cx="206.4" cy="106" rx="9.5" ry="6.7" transform="rotate(-18 206.4 106)" class="note-head"/><line x1="214.4" y1="106" x2="214.4" y2="62" class="stem"/><path d="M 214.4 62 q 21 5 8 25" class="flag"/><circle cx="206.4" cy="135" r="9.5" fill="#e8539a" class="color-dot"/><ellipse cx="269.8" cy="126" rx="9.5" ry="6.7" transform="rotate(-18 269.8 126)" class="note-head"/><line x1="277.8" y1="126" x2="277.8" y2="82" class="stem"/><circle cx="269.8" cy="155" r="9.5" fill="#f26a22" class="color-dot"/><line x1="330" y1="60" x2="330" y2="140" stroke="#111" stroke-width="2"/><line x1="365.1" y1="156" x2="393.1" y2="156" class="ledger"/><ellipse cx="379.1" cy="156" rx="9.5" ry="6.7" transform="rotate(-18 379.1 156)" class="note-head"/><line x1="387.1" y1="156" x2="387.1" y2="112" class="stem"/><path d="M 387.1 112 q 21 5 8 25" class="flag"/><circle cx="379.1" cy="185" r="9.5" fill="#2563d4" class="color-dot"/><ellipse cx="421.4" cy="106" rx="9.5" ry="6.7" transform="rotate(-18 421.4 106)" class="note-head"/><line x1="429.4" y1="106" x2="429.4" y2="62" class="stem"/><path d="M 429.4 62 q 21 5 8 25" class="flag"/><circle cx="421.4" cy="135" r="9.5" fill="#e8539a" class="color-dot"/><ellipse cx="484.8" cy="126" rx="9.5" ry="6.7" transform="rotate(-18 484.8 126)" class="note-head"/><line x1="492.8" y1="126" x2="492.8" y2="82" class="stem"/><circle cx="484.8" cy="155" r="9.5" fill="#f26a22" class="color-dot"/><line x1="545" y1="60" x2="545" y2="140" stroke="#111" stroke-width="5"/></svg><svg viewBox="0 0 560 225" class="staff-svg" role="img" aria-label="תווים למנגינה"><line x1="102" y1="60" x2="545" y2="60" class="staff-line"/><line x1="102" y1="80" x2="545" y2="80" class="staff-line"/><line x1="102" y1="100" x2="545" y2="100" class="staff-line"/><line x1="102" y1="120" x2="545" y2="120" class="staff-line"/><line x1="102" y1="140" x2="545" y2="140" class="staff-line"/><text x="17" y="146" class="clef">𝄞</text><text x="77" y="92" class="time">2</text><text x="77" y="134" class="time">4</text><ellipse cx="164.1" cy="116" rx="9.5" ry="6.7" transform="rotate(-18 164.1 116)" class="note-head"/><line x1="172.1" y1="116" x2="172.1" y2="72" class="stem"/><path d="M 172.1 72 q 21 5 8 25" class="flag"/><circle cx="164.1" cy="145" r="9.5" fill="#8a4fb8" class="color-dot"/><ellipse cx="206.4" cy="106" rx="9.5" ry="6.7" transform="rotate(-18 206.4 106)" class="note-head"/><line x1="214.4" y1="106" x2="214.4" y2="62" class="stem"/><path d="M 214.4 62 q 21 5 8 25" class="flag"/><circle cx="206.4" cy="135" r="9.5" fill="#e8539a" class="color-dot"/><ellipse cx="248.6" cy="116" rx="9.5" ry="6.7" transform="rotate(-18 248.6 116)" class="note-head"/><line x1="256.6" y1="116" x2="256.6" y2="72" class="stem"/><path d="M 256.6 72 q 21 5 8 25" class="flag"/><circle cx="248.6" cy="145" r="9.5" fill="#8a4fb8" class="color-dot"/><ellipse cx="290.9" cy="126" rx="9.5" ry="6.7" transform="rotate(-18 290.9 126)" class="note-head"/><line x1="298.9" y1="126" x2="298.9" y2="82" class="stem"/><path d="M 298.9 82 q 21 5 8 25" class="flag"/><circle cx="290.9" cy="155" r="9.5" fill="#f26a22" class="color-dot"/><line x1="330" y1="60" x2="330" y2="140" stroke="#111" stroke-width="2"/><ellipse cx="379.1" cy="136" rx="9.5" ry="6.7" transform="rotate(-18 379.1 136)" class="note-head"/><line x1="387.1" y1="136" x2="387.1" y2="92" class="stem"/><path d="M 387.1 92 q 21 5 8 25" class="flag"/><circle cx="379.1" cy="165" r="9.5" fill="#f3bf19" class="color-dot"/><ellipse cx="421.4" cy="146" rx="9.5" ry="6.7" transform="rotate(-18 421.4 146)" class="note-head"/><line x1="429.4" y1="146" x2="429.4" y2="102" class="stem"/><path d="M 429.4 102 q 21 5 8 25" class="flag"/><circle cx="421.4" cy="175" r="9.5" fill="#4caf36" class="color-dot"/><ellipse cx="463.6" cy="136" rx="9.5" ry="6.7" transform="rotate(-18 463.6 136)" class="note-head"/><line x1="471.6" y1="136" x2="471.6" y2="92" class="stem"/><path d="M 471.6 92 q 21 5 8 25" class="flag"/><circle cx="463.6" cy="165" r="9.5" fill="#f3bf19" class="color-dot"/><line x1="491.9" y1="156" x2="519.9" y2="156" class="ledger"/><ellipse cx="505.9" cy="156" rx="9.5" ry="6.7" transform="rotate(-18 505.9 156)" class="note-head"/><line x1="513.9" y1="156" x2="513.9" y2="112" class="stem"/><path d="M 513.9 112 q 21 5 8 25" class="flag"/><circle cx="505.9" cy="185" r="9.5" fill="#2563d4" class="color-dot"/><line x1="545" y1="60" x2="545" y2="140" stroke="#111" stroke-width="5"/></svg></div>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="keyboard-scroll">
+    <div class="piano" id="piano">
+      <button type="button" class="piano-key white-key" data-note="C4"><span class="key-label"><span class="key-dot" style="background:var(--do)"></span>דו</span></button>
+      <button type="button" class="piano-key white-key" data-note="D4"><span class="key-label"><span class="key-dot" style="background:var(--re)"></span>רה</span></button>
+      <button type="button" class="piano-key white-key" data-note="E4"><span class="key-label"><span class="key-dot" style="background:var(--mi)"></span>מי</span></button>
+      <button type="button" class="piano-key white-key" data-note="F4"><span class="key-label"><span class="key-dot" style="background:var(--fa)"></span>פה</span></button>
+      <button type="button" class="piano-key white-key" data-note="G4"><span class="key-label"><span class="key-dot" style="background:var(--sol)"></span>סול</span></button>
+      <button type="button" class="piano-key white-key" data-note="A4"><span class="key-label"><span class="key-dot" style="background:var(--la)"></span>לה</span></button>
+      <button type="button" class="piano-key white-key" data-note="B4"><span class="key-label"><span class="key-dot" style="background:var(--si)"></span>סי</span></button>
+      <span class="black-key b1"></span><span class="black-key b2"></span>
+      <span class="black-key b3"></span><span class="black-key b4"></span><span class="black-key b5"></span>
+    </div>
+  </div>
+  <div class="controls"><button type="button" class="control-button" id="reset">↻ נגנו שוב</button></div>
+  <div class="status" id="status">לחצו על קליד כדי להתחיל.</div>
+</section>
+</main>
+
+<script>
+const frequencies={C4:261.63,D4:293.66,E4:329.63,F4:349.23,G4:392.00,A4:440.00,B4:493.88};
+let ctx=null;
+
+function playPiano(note){
+  ctx ||= new (window.AudioContext||window.webkitAudioContext)();
+  if(ctx.state==='suspended') ctx.resume();
+  const now=ctx.currentTime;
+  const master=ctx.createGain();
+  master.gain.setValueAtTime(0.0001,now);
+  master.gain.exponentialRampToValueAtTime(0.55,now+0.01);
+  master.gain.exponentialRampToValueAtTime(0.16,now+0.22);
+  master.gain.exponentialRampToValueAtTime(0.0001,now+1.7);
+  master.connect(ctx.destination);
+
+  const harmonics=[
+    [1,'triangle',0.72],[2,'sine',0.20],[3,'sine',0.08],[4,'sine',0.035]
+  ];
+  harmonics.forEach(([multiple,type,level])=>{
+    const osc=ctx.createOscillator();
+    const gain=ctx.createGain();
+    osc.type=type;
+    osc.frequency.setValueAtTime(frequencies[note]*multiple,now);
+    gain.gain.value=level;
+    osc.connect(gain).connect(master);
+    osc.start(now);
+    osc.stop(now+1.75);
+  });
+}
+
+document.querySelectorAll('.white-key').forEach(key=>{
+  key.addEventListener('pointerdown',e=>{
+    e.preventDefault();
+    playPiano(key.dataset.note);
+    key.classList.add('active');
+    document.getElementById('status').textContent='';
+    setTimeout(()=>key.classList.remove('active'),180);
+  });
+});
+
+document.getElementById('reset').addEventListener('click',()=>{
+  document.querySelectorAll('.white-key').forEach(k=>k.classList.remove('active'));
+  document.getElementById('status').textContent='אפשר להתחיל שוב מהתו הראשון.';
+});
+</script>
+</body>
+</html>
