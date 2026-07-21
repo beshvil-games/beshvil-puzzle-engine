@@ -2,10 +2,13 @@
   "use strict";
 
   const config = window.SONG_CONFIG;
-  if (!config) throw new Error("SONG_CONFIG is missing");
-
   const score = document.getElementById("score");
   const piano = document.getElementById("piano");
+
+  if (!config) {
+    score.innerHTML = '<p class="notation-error">קובץ השיר לא נטען.</p>';
+    return;
+  }
 
   document.getElementById("gameTitle").textContent = config.title;
   document.getElementById("gameSubtitle").textContent = config.subtitle;
@@ -28,7 +31,7 @@
 
   function parseNote(note) {
     const normalized = note.replace("s","#");
-    const match = /^([A-G])(#?)(\\d+)$/.exec(normalized);
+    const match = /^([A-G])(#?)(\d+)$/.exec(normalized);
     if (!match) throw new Error(`Invalid note: ${note}`);
     return {
       letter:match[1],
@@ -42,26 +45,30 @@
   }
 
   function renderNotation() {
-    if (!window.ABCJS) {
-      score.innerHTML = '<p class="notation-error">לא ניתן לטעון את התווים. נסו לרענן את הדף.</p>';
+    if (!window.ABCJS || typeof window.ABCJS.renderAbc !== "function") {
+      score.innerHTML =
+        '<p class="notation-error">מנוע התווים לא נטען. ודאו שהקובץ abcjs-basic-min.js הועלה.</p>';
       return;
     }
 
     score.innerHTML = "";
 
-    const visualObjects = ABCJS.renderAbc(score, config.abc, {
+    window.ABCJS.renderAbc(score, config.abc, {
       responsive:"resize",
-      staffwidth:900,
+      staffwidth:930,
       scale:1.25,
-      paddingtop:8,
-      paddingbottom:35,
+      paddingtop:6,
+      paddingbottom:42,
       paddingleft:10,
       paddingright:10,
       add_classes:true,
+      stretchlast:true,
       selectionColor:"transparent"
     });
 
-    requestAnimationFrame(() => addColorDots(visualObjects));
+    requestAnimationFrame(() => {
+      requestAnimationFrame(addColorDots);
+    });
   }
 
   function addColorDots() {
@@ -70,16 +77,17 @@
 
     svg.querySelectorAll(".note-color-dots-layer").forEach(el => el.remove());
 
-    const noteGroups = [...svg.querySelectorAll(".abcjs-note")]
+    const allNoteGroups = [...svg.querySelectorAll(".abcjs-note")];
+    const noteGroups = allNoteGroups
       .filter(group => {
-        const box = group.getBBox();
-        return box.width > 0 && box.height > 0;
+        try {
+          const box = group.getBBox();
+          return box.width > 0 && box.height > 0;
+        } catch {
+          return false;
+        }
       })
       .slice(0, config.notes.length);
-
-    if (noteGroups.length !== config.notes.length) {
-      console.warn(`Expected ${config.notes.length} notes, found ${noteGroups.length}`);
-    }
 
     const ns = "http://www.w3.org/2000/svg";
     const layer = document.createElementNS(ns,"g");
@@ -88,18 +96,27 @@
     noteGroups.forEach((group,index) => {
       const box = group.getBBox();
       const circle = document.createElementNS(ns,"circle");
-      const color = colorFor(config.notes[index]);
 
-      circle.setAttribute("cx",box.x + box.width / 2);
-      circle.setAttribute("cy",145);
-      circle.setAttribute("r",8.5);
-      circle.setAttribute("fill",color);
+      circle.setAttribute("cx", box.x + box.width / 2);
+      circle.setAttribute("cy", 145);
+      circle.setAttribute("r", 8.5);
+      circle.setAttribute("fill", colorFor(config.notes[index]));
       circle.setAttribute("class","note-color-dot");
 
       layer.appendChild(circle);
     });
 
     svg.appendChild(layer);
+
+    const viewBox = svg.getAttribute("viewBox")?.split(/\s+/).map(Number);
+    if (viewBox && viewBox.length === 4 && viewBox[3] < 172) {
+      viewBox[3] = 172;
+      svg.setAttribute("viewBox", viewBox.join(" "));
+      svg.style.aspectRatio = `${viewBox[2]} / ${viewBox[3]}`;
+      svg.style.height = "auto";
+      const renderedHeight = score.clientWidth * viewBox[3] / viewBox[2];
+      score.style.height = `${renderedHeight}px`;
+    }
   }
 
   function createKey(note,type,left) {
@@ -108,7 +125,7 @@
     key.className = `key ${type}`;
     key.dataset.note = note;
     key.style.left = left;
-    key.setAttribute("aria-label",note);
+    key.setAttribute("aria-label", note);
 
     if (type === "white") {
       const letter = parseNote(note).letter;
