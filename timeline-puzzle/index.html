@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>חידת סדר כרונולוגי</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <header class="brand-header">
+    <img src="logo.png" alt="בשביל החוויה – אירועים בדרך אחרת" class="brand-logo">
+  </header>
+
+  <main class="game">
+    <h1>סדרו את התמונות לפי הסדר הכרונולוגי</h1>
+
+    <p class="instructions">
+      מקום 1 הוא המוקדם ביותר. המקום האחרון הוא המאוחר ביותר.<br>
+      במחשב גררו תמונה על תמונה אחרת. בטלפון לחצו לחיצה ממושכת ואז גררו.
+    </p>
+
+    <div class="timeline-key" aria-hidden="true">
+      <span>המוקדם ביותר</span>
+      <div class="timeline-line"></div>
+      <span>המאוחר ביותר</span>
+    </div>
+
+    <div id="container"></div>
+
+    <div class="buttons">
+      <button id="checkButton">בדיקה</button>
+      <button id="shuffleButton">ערבוב מחדש</button>
+      <button id="soundButton" aria-pressed="true">🔊 צלילים פעילים</button>
+    </div>
+
+    <div id="message"></div>
+
+    <section id="successPanel" class="success-panel" aria-live="polite">
+      <h2>כל הכבוד!</h2>
+      <p>מצאתם את התחנה הבאה שלכם.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    © 2026 בשביל החוויה – אירועים בדרך אחרת. כל הזכויות שמורות.
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
