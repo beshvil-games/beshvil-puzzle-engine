@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ניהול משחק | בשביל החוויה</title>
+  <link rel="stylesheet" href="../assets/shared.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <img src="../assets/logo.png" alt="בשביל החוויה" class="logo">
+    <div>
+      <h1>ניהול המשחק</h1>
+      <p>מסדרים את התחנות ויוצרים קודי QR</p>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="panel game-details">
+      <h2>פרטי המשחק</h2>
+
+      <label class="field">
+        <span>שם המשחק</span>
+        <input id="gameName" type="text" value="יום הולדת 50 לרונית" autocomplete="off">
+      </label>
+
+      <label class="field">
+        <span>הודעת סיום</span>
+        <textarea id="finalMessage" rows="3" placeholder="אפשר להשאיר ריק ולהוסיף בהמשך"></textarea>
+      </label>
+
+      <p class="hint">
+        בשלב הזה הודעת הסיום נשמרת במסך הניהול בלבד. לאחר שנחליט מה יקרה בסוף,
+        נחבר אותה לחידה האחרונה.
+      </p>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <h2>סדר התחנות</h2>
+          <p>גררי את התחנות או השתמשי בחיצים. תחנה כבויה לא תופיע בדף ה־QR.</p>
+        </div>
+        <button id="resetButton" class="button secondary" type="button">איפוס</button>
+      </div>
+
+      <ol id="puzzleList" class="puzzle-list" aria-label="רשימת התחנות"></ol>
+    </section>
+
+    <section class="actions">
+      <button id="saveButton" class="button secondary" type="button">שמירת הסדר</button>
+      <button id="generateButton" class="button primary" type="button">יצירת קודי QR</button>
+    </section>
+
+    <p id="statusMessage" class="status-message" role="status" aria-live="polite"></p>
+
+    <section id="qrSection" class="panel qr-section" hidden>
+      <div class="section-heading">
+        <div>
+          <h2>קודי ה־QR למשחק</h2>
+          <p>כל קוד מוביל ישירות לחידה של אותה תחנה.</p>
+        </div>
+        <button id="printButton" class="button secondary" type="button">הדפסה / שמירה כ־PDF</button>
+      </div>
+
+      <div id="qrGrid" class="qr-grid"></div>
+    </section>
+  </main>
+
+  <template id="puzzleItemTemplate">
+    <li class="puzzle-item" draggable="true">
+      <div class="drag-handle" title="גרירה" aria-hidden="true">☰</div>
+
+      <div class="station-number" aria-label="מספר תחנה"></div>
+
+      <label class="toggle-wrap">
+        <input class="active-toggle" type="checkbox">
+        <span class="toggle-ui" aria-hidden="true"></span>
+        <span class="sr-only">הצגת התחנה</span>
+      </label>
+
+      <div class="puzzle-info">
+        <strong class="puzzle-type"></strong>
+        <label>
+          <span class="sr-only">שם התחנה</span>
+          <input class="station-title" type="text">
+        </label>
+        <a class="puzzle-link" target="_blank" rel="noopener">פתיחת החידה לבדיקה</a>
+      </div>
+
+      <div class="move-buttons">
+        <button class="icon-button move-up" type="button" title="הזזה למעלה" aria-label="הזזה למעלה">↑</button>
+        <button class="icon-button move-down" type="button" title="הזזה למטה" aria-label="הזזה למטה">↓</button>
+      </div>
+    </li>
+  </template>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
+          integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07jD/17GvVhS8k+R6SX5l9wQ5d8F6G6F6V5D4L5D4YJp6mB5M5V5Q5Q5Q5Q5Q=="
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer"></script>
+  <script>
+    if (typeof QRCode === "undefined") {
+      const fallback = document.createElement("script");
+      fallback.src = "https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js";
+      document.head.appendChild(fallback);
+    }
+  </script>
+  <script src="script.js"></script>
+</body>
+</html>
