@@ -99,7 +99,7 @@
   }
 }
 
-@media(max-width:520px){
+@media(max-width:640px){
   .answer-row{
     grid-template-columns:1fr;
   }
@@ -149,4 +149,14 @@
   #successPanel{
     margin-top:8px;
   }
+}
+
+@media (max-width:640px) and (orientation:portrait){
+.hero h1{font-size:clamp(1.5rem,6.8vw,1.9rem);}
+.riddle-text{padding:12px;}
+.riddle-text p{font-size:.98rem;line-height:1.45;}
+.riddle-text p+p{margin-top:8px;}
+.answer-area{margin-top:14px;}
+.answer-area label{margin-bottom:6px;}
+.answer-row input,.answer-row button{min-height:42px;}
 }
