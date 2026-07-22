@@ -12,7 +12,8 @@
 <body>
   <main class="app-shell">
     <header class="brand-header">
-      <img class="brand-logo" src="../assets/logo.png"
+      <img class="brand-logo"
+           src="../assets/logo.png"
            alt="בשביל החוויה – אירועים בדרך אחרת">
     </header>
 
@@ -24,10 +25,10 @@
     <section class="puzzle-card crossword-card">
       <div class="crossword-layout">
         <section class="board-panel" aria-label="לוח התשבץ">
-          <div class="board-scroll">
+          <div class="board-frame">
             <div id="crosswordGrid" class="crossword-grid"></div>
           </div>
-          <p class="board-tip">לחצו על הגדרה או על תא כדי להתחיל להקליד.</p>
+          <p class="board-tip">לחצו על הגדרה, ואז הקלידו את התשובה.</p>
         </section>
 
         <section class="clues-panel" aria-label="הגדרות התשבץ">
@@ -37,15 +38,15 @@
       </div>
 
       <div class="actions">
-        <button id="checkButton" class="btn-primary">בדיקת תשובות</button>
-        <button id="clearButton" class="btn-secondary">ניקוי התשבץ</button>
+        <button id="checkButton" class="btn-primary" type="button">בדיקת תשובות</button>
+        <button id="clearButton" class="btn-secondary" type="button">ניקוי התשבץ</button>
       </div>
 
       <div id="message" class="message" aria-live="polite"></div>
 
-      <section id="successPanel" class="success-panel" aria-live="polite">
+      <section id="successPanel" class="success-panel hidden" aria-live="polite">
         <h2>כל הכבוד!</h2>
-        <p>פתרתם את התשבץ. הטור הירוק מגלה את התחנה הבאה.</p>
+        <p>פתרתם את התשבץ. הטור הירוק מגלה את התחנה הבאה:</p>
         <p id="revealedAnswer" class="revealed-answer"></p>
       </section>
     </section>
