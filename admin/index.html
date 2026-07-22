@@ -26,12 +26,17 @@
       </label>
 
       <label class="field">
+        <span>מיקום הסיום</span>
+        <input id="finalLocation" type="text" placeholder="למשל: רחבת הדשא" autocomplete="off">
+      </label>
+
+      <label class="field full-width">
         <span>הודעת סיום</span>
         <textarea id="finalMessage" rows="3" placeholder="אפשר להשאיר ריק ולהוסיף בהמשך"></textarea>
       </label>
 
       <p class="hint">
-        בשלב הזה הודעת הסיום נשמרת במסך הניהול בלבד. לאחר שנחליט מה יקרה בסוף,
+        הודעת הסיום נשמרת כרגע במסך הניהול בלבד. לאחר שנחליט מה יקרה בסוף,
         נחבר אותה לחידה האחרונה.
       </p>
     </section>
@@ -43,6 +48,16 @@
           <p>גררי את התחנות או השתמשי בחיצים. תחנה כבויה לא תופיע בדף ה־QR.</p>
         </div>
         <button id="resetButton" class="button secondary" type="button">איפוס</button>
+      </div>
+
+      <div class="column-headings" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span>סוג החידה</span>
+        <span>לאן מוביל כתב החידה</span>
+        <span>מיקום הדבקת ה־QR</span>
+        <span></span>
       </div>
 
       <ol id="puzzleList" class="puzzle-list" aria-label="רשימת התחנות"></ol>
@@ -59,12 +74,39 @@
       <div class="section-heading">
         <div>
           <h2>קודי ה־QR למשחק</h2>
-          <p>כל קוד מוביל ישירות לחידה של אותה תחנה.</p>
+          <p>בהדפסה יופיעו רק מיקום ההדבקה וקוד ה־QR.</p>
         </div>
-        <button id="printButton" class="button secondary" type="button">הדפסה / שמירה כ־PDF</button>
+        <div class="section-buttons">
+          <button id="productionPrintButton" class="button secondary" type="button">הדפסת דף הפקה</button>
+          <button id="printButton" class="button secondary" type="button">הדפסת קודי QR</button>
+        </div>
       </div>
 
       <div id="qrGrid" class="qr-grid"></div>
+    </section>
+
+    <section id="productionSection" class="panel production-section" hidden>
+      <div class="section-heading">
+        <div>
+          <h2>דף הפקה</h2>
+          <p>המידע המלא בשבילך בלבד.</p>
+        </div>
+      </div>
+      <div class="production-summary">
+        <p><strong>שם המשחק:</strong> <span id="productionGameName"></span></p>
+        <p><strong>מיקום הסיום:</strong> <span id="productionFinalLocation"></span></p>
+      </div>
+      <table class="production-table">
+        <thead>
+          <tr>
+            <th>סדר</th>
+            <th>סוג החידה</th>
+            <th>לאן מוביל כתב החידה</th>
+            <th>מיקום הדבקת ה־QR</th>
+          </tr>
+        </thead>
+        <tbody id="productionBody"></tbody>
+      </table>
     </section>
   </main>
 
@@ -80,24 +122,29 @@
         <span class="sr-only">הצגת התחנה</span>
       </label>
 
-      <div class="puzzle-info">
-        <strong class="puzzle-type"></strong>
-        <label>
-          <span class="sr-only">שם התחנה</span>
-          <input class="station-title" type="text">
-        </label>
-        <a class="puzzle-link" target="_blank" rel="noopener">פתיחת החידה לבדיקה</a>
-      </div>
+      <strong class="puzzle-type"></strong>
 
-      <div class="move-buttons">
-        <button class="icon-button move-up" type="button" title="הזזה למעלה" aria-label="הזזה למעלה">↑</button>
-        <button class="icon-button move-down" type="button" title="הזזה למטה" aria-label="הזזה למטה">↓</button>
+      <label>
+        <span class="sr-only">לאן מוביל כתב החידה</span>
+        <input class="destination-input" type="text" placeholder="למשל: עץ האלון">
+      </label>
+
+      <label>
+        <span class="sr-only">מיקום הדבקת ה־QR</span>
+        <input class="qr-location-input" type="text" placeholder="למשל: ליד שער הכניסה">
+      </label>
+
+      <div class="row-actions">
+        <a class="puzzle-link" target="_blank" rel="noopener">בדיקה</a>
+        <div class="move-buttons">
+          <button class="icon-button move-up" type="button" title="הזזה למעלה" aria-label="הזזה למעלה">↑</button>
+          <button class="icon-button move-down" type="button" title="הזזה למטה" aria-label="הזזה למטה">↓</button>
+        </div>
       </div>
     </li>
   </template>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
-          integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07jD/17GvVhS8k+R6SX5l9wQ5d8F6G6F6V5D4L5D4YJp6mB5M5V5Q5Q5Q5Q5Q=="
           crossorigin="anonymous"
           referrerpolicy="no-referrer"></script>
   <script>
