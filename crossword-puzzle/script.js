@@ -14,6 +14,7 @@
   const prevClueButton = document.getElementById("prevClueButton");
   const nextClueButton = document.getElementById("nextClueButton");
   const mobileCheckButton = document.getElementById("mobileCheckButton");
+  const landscapeCheckButton = document.getElementById("landscapeCheckButton");
 
   if (!puzzle || !Array.isArray(puzzle.entries) || !puzzle.entries.length) {
     showMessage("קובץ נתוני התשבץ לא נטען.", "error");
@@ -44,6 +45,7 @@
   window.addEventListener("orientationchange", () => setTimeout(resizeBoard, 140));
   window.visualViewport?.addEventListener("resize", handleViewportResize);
   mobileCheckButton?.addEventListener("click", checkAnswers);
+  landscapeCheckButton?.addEventListener("click", checkAnswers);
 
   function renderGrid() {
     const occupied = new Map();
@@ -93,7 +95,12 @@
           activeEntryIndex = puzzle.entries.findIndex(item => item.number === info.entry.number);
           activateEntry(info.entry.number, false);
           replaceMode = Boolean(input.value);
-          keepFocusedCellVisible(wrapper);
+
+          if (isLandscapePhone()) {
+            scrollClueToTop(info.entry.number);
+          } else {
+            keepFocusedCellVisible(wrapper);
+          }
         });
 
         input.addEventListener("pointerdown", () => {
@@ -132,6 +139,10 @@
       const choose = () => {
         activeEntryIndex = position;
         activateEntry(entry.number, true);
+
+        if (isLandscapePhone()) {
+          setTimeout(() => scrollEntryToTop(entry.number), 120);
+        }
       };
 
       item.addEventListener("click", choose);
@@ -162,10 +173,16 @@
   function moveClueForReading(direction) {
     activeEntryIndex =
       (activeEntryIndex + direction + puzzle.entries.length) % puzzle.entries.length;
+
     const entry = puzzle.entries[activeEntryIndex];
     activateEntry(entry.number, false);
-    const clue = document.querySelector(`.clue-item[data-number="${entry.number}"]`);
-    clue?.scrollIntoView({behavior:"smooth", block:"center"});
+
+    if (isLandscapePhone()) {
+      scrollClueToTop(entry.number);
+    } else {
+      const clue = document.querySelector(`.clue-item[data-number="${entry.number}"]`);
+      clue?.scrollIntoView({behavior:"smooth", block:"center"});
+    }
   }
 
   function updateMobileClue() {
@@ -180,22 +197,25 @@
     const frame = document.querySelector(".board-frame");
     if (!frame) return;
 
-    const landscapePhone =
-      window.matchMedia("(orientation: landscape) and (max-height: 620px)").matches;
+    const landscapePhone = isLandscapePhone();
+    const viewportHeight = window.visualViewport?.height || window.innerHeight;
+
+    if (landscapePhone) {
+      const layout = document.querySelector(".crossword-layout");
+      const safeHeight = Math.max(150, viewportHeight - 12);
+      layout?.style.setProperty("height", `${safeHeight}px`);
+    }
 
     const availableWidth = landscapePhone
-      ? Math.max(250, frame.clientWidth - 4)
+      ? Math.max(250, frame.clientWidth - 8)
       : Math.max(250, frame.clientWidth - 14);
 
-    const availableHeight = landscapePhone
-      ? Math.max(170, (window.visualViewport?.height || window.innerHeight) - 32)
-      : 620;
-
+    /* ברוחב לא מנסים לדחוס את כל התשבץ לגובה.
+       הלוח עצמו גולל, והקוד מקפיץ לשורה הפעילה. */
     const byWidth = Math.floor(availableWidth / puzzle.columns);
-    const byHeight = Math.floor(availableHeight / rowCount);
-    const maxSize = landscapePhone ? 34 : 44;
-    const minSize = landscapePhone ? 22 : 24;
-    const cellSize = Math.max(minSize, Math.min(maxSize, byWidth, byHeight));
+    const maxSize = landscapePhone ? 38 : 44;
+    const minSize = landscapePhone ? 25 : 24;
+    const cellSize = Math.max(minSize, Math.min(maxSize, byWidth));
 
     grid.style.setProperty("--cell-size", `${cellSize}px`);
   }
@@ -226,6 +246,10 @@
     });
 
     updateMobileClue();
+
+    if (isLandscapePhone()) {
+      scrollClueToTop(number);
+    }
 
     if (!focusFirstEmpty) return;
 
@@ -344,10 +368,17 @@
 
     if (event.key === "Enter") {
       event.preventDefault();
-      const portraitPhone = window.matchMedia("(max-width:760px) and (orientation:portrait)").matches;
+      const portraitPhone =
+        window.matchMedia("(max-width:760px) and (orientation:portrait)").matches;
+
       if (portraitPhone) {
         event.target.blur();
         moveClueForReading(1);
+      } else if (isLandscapePhone()) {
+        event.target.blur();
+        moveClueForReading(1);
+        const nextEntry = puzzle.entries[activeEntryIndex];
+        setTimeout(() => scrollClueToTop(nextEntry.number), 80);
       } else {
         moveClue(1);
       }
@@ -367,13 +398,51 @@
   function keepFocusedCellVisible(wrapper) {
     if (!wrapper) return;
 
-    const landscapePhone =
-      window.matchMedia("(orientation: landscape) and (max-height: 620px)").matches;
+    if (isLandscapePhone()) {
+      const number = Number(wrapper.dataset.entry);
+      scrollEntryToTop(number);
+      scrollClueToTop(number);
+      return;
+    }
 
     wrapper.scrollIntoView({
       behavior:"smooth",
-      block:landscapePhone ? "center" : "nearest",
+      block:"nearest",
       inline:"nearest"
+    });
+  }
+
+  function isLandscapePhone() {
+    return window.matchMedia(
+      "(orientation: landscape) and (max-height: 620px)"
+    ).matches;
+  }
+
+  function scrollClueToTop(number) {
+    const panel = document.querySelector(".clues-list");
+    const clue = document.querySelector(`.clue-item[data-number="${number}"]`);
+    if (!panel || !clue) return;
+
+    const top = clue.offsetTop - panel.offsetTop;
+    panel.scrollTo({top:Math.max(0, top), behavior:"smooth"});
+  }
+
+  function scrollEntryToTop(number) {
+    const frame = document.querySelector(".board-frame");
+    const cells = [...document.querySelectorAll(
+      `.crossword-cell[data-entry="${number}"]`
+    )];
+
+    if (!frame || !cells.length) return;
+
+    const topCell = cells.reduce((top, cell) =>
+      cell.offsetTop < top.offsetTop ? cell : top
+    );
+
+    frame.scrollTo({
+      top:Math.max(0, topCell.offsetTop - 4),
+      left:Math.max(0, topCell.offsetLeft - frame.clientWidth / 3),
+      behavior:"smooth"
     });
   }
 

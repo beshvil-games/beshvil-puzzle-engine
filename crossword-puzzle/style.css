@@ -475,3 +475,142 @@
   body.keyboard-open .mobile-clue-card{min-height:52px;padding:8px 10px;font-size:.86rem;}
   body.keyboard-open .mobile-check-button{min-height:38px;padding:7px 10px;margin-top:5px;}
 }
+
+
+/* =========================================================
+   v1.5 – רוחב: כל ההגדרות + קפיצה דו־כיוונית
+   ========================================================= */
+
+.landscape-actions{
+  display:none;
+}
+
+/* ברוחב חוזרים לרשימת ההגדרות המלאה.
+   שני הצדדים הם אזורי עבודה בגובה המסך, והקוד מקפיץ
+   אוטומטית להגדרה/שורה הפעילה. */
+@media(orientation:landscape) and (max-height:620px){
+  body{
+    overflow:hidden;
+  }
+
+  .app-shell{
+    height:100dvh;
+    overflow:hidden;
+  }
+
+  .crossword-card{
+    height:100dvh;
+    overflow:hidden;
+  }
+
+  .crossword-layout{
+    height:calc(100dvh - 16px);
+    grid-template-columns:minmax(290px,.9fr) minmax(330px,1.1fr);
+    align-items:stretch;
+  }
+
+  .board-panel,
+  .clues-panel{
+    min-height:0;
+    height:100%;
+  }
+
+  .board-frame{
+    height:100%;
+    overflow:auto;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+    padding:4px;
+  }
+
+  .clues-panel{
+    display:flex;
+    flex-direction:column;
+    height:100%;
+    min-height:0;
+    overflow:hidden;
+  }
+
+  .clues-panel .card-title{
+    flex:0 0 auto;
+    margin:0 0 5px;
+  }
+
+  .mobile-clue-navigator{
+    display:none!important;
+  }
+
+  .clues-list{
+    display:grid!important;
+    flex:1 1 auto;
+    min-height:0;
+    overflow:auto;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+    padding:2px 3px 8px;
+    scroll-padding-top:2px;
+  }
+
+  .landscape-actions{
+    display:block;
+    flex:0 0 auto;
+    padding-top:6px;
+  }
+
+  .landscape-actions button{
+    width:100%;
+    min-height:40px;
+    padding:8px 12px;
+  }
+
+  .actions{
+    display:none!important;
+  }
+
+  .message{
+    display:none;
+  }
+
+  .success-panel{
+    position:fixed;
+    inset:8px;
+    z-index:1200;
+    overflow:auto;
+    margin:0;
+  }
+
+  /* מבטלים את הכרטיס הצף מהגרסה הקודמת */
+  body.keyboard-open .clues-panel{
+    position:static;
+    width:auto;
+    padding:0;
+    border:0;
+    border-radius:0;
+    background:transparent;
+    box-shadow:none;
+  }
+
+  body.keyboard-open .clues-panel .card-title{
+    display:block;
+  }
+}
+
+/* כשהמקלדת פתוחה, גובה אזורי העבודה מחושב ב-JS לפי visualViewport */
+@media(orientation:landscape) and (max-height:430px){
+  .crossword-layout{
+    grid-template-columns:minmax(250px,.9fr) minmax(290px,1.1fr);
+  }
+
+  .clue-item{
+    padding:4px 6px;
+  }
+
+  .clue-text{
+    font-size:.76rem;
+  }
+
+  .clue-number{
+    min-width:1.45rem;
+    min-height:1.45rem;
+  }
+}
