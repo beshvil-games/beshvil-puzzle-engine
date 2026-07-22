@@ -649,3 +649,56 @@
     display:none;
   }
 }
+
+
+/* =========================================================
+   v1.7 – הצלחה לא מסתירה + קליק ראשון לאורך
+   ========================================================= */
+
+.landscape-solved-message{
+  padding:7px 9px;
+  border:1px solid rgba(79,139,59,.38);
+  border-radius:10px;
+  background:var(--brand-green-soft);
+  color:var(--brand-brown);
+  text-align:center;
+  line-height:1.25;
+}
+
+.landscape-solved-message strong{
+  display:block;
+  color:var(--brand-green-dark);
+  font-size:.95rem;
+}
+
+.landscape-solved-message span{
+  display:block;
+  margin-top:2px;
+  font-size:.76rem;
+  font-weight:700;
+}
+
+@media(orientation:landscape) and (max-height:620px){
+  /* ברוחב לא מציגים כלל את כרטיס ההצלחה הגדול */
+  #successPanel{
+    display:none!important;
+  }
+
+  body.puzzle-solved .landscape-actions{
+    display:block!important;
+  }
+
+  body.puzzle-solved #landscapeCheckButton{
+    display:none;
+  }
+
+  body.puzzle-solved .landscape-solved-message{
+    display:block!important;
+  }
+
+  /* הלוח ממשיך לגלול גם אחרי פתרון מלא */
+  body.puzzle-solved .board-frame{
+    overflow:auto!important;
+    pointer-events:auto;
+  }
+}

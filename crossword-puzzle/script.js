@@ -15,6 +15,7 @@
   const nextClueButton = document.getElementById("nextClueButton");
   const mobileCheckButton = document.getElementById("mobileCheckButton");
   const landscapeCheckButton = document.getElementById("landscapeCheckButton");
+  const landscapeSolvedMessage = document.getElementById("landscapeSolvedMessage");
 
   if (!puzzle || !Array.isArray(puzzle.entries) || !puzzle.entries.length) {
     showMessage("קובץ נתוני התשבץ לא נטען.", "error");
@@ -32,6 +33,7 @@
   let activeEntryNumber = puzzle.entries[0].number;
   let activeEntryIndex = 0;
   let replaceMode = false;
+  let portraitBoardIntroduced = false;
 
   grid.style.gridTemplateColumns = `repeat(${puzzle.columns}, var(--cell-size))`;
   grid.style.gridTemplateRows = `repeat(${rowCount}, var(--cell-size))`;
@@ -103,7 +105,28 @@
           }
         });
 
-        input.addEventListener("pointerdown", () => {
+        input.addEventListener("pointerdown", event => {
+          const portraitPhone =
+            window.matchMedia("(max-width:760px) and (orientation:portrait)").matches;
+
+          if (portraitPhone && !portraitBoardIntroduced) {
+            event.preventDefault();
+            portraitBoardIntroduced = true;
+            activeEntryIndex = puzzle.entries.findIndex(
+              item => item.number === info.entry.number
+            );
+            activateEntry(info.entry.number, false);
+
+            const clue = document.querySelector(
+              `.clue-item[data-number="${info.entry.number}"]`
+            );
+            clue?.scrollIntoView({
+              behavior:"smooth",
+              block:"center"
+            });
+            return;
+          }
+
           replaceMode = Boolean(input.value);
         });
 
@@ -482,22 +505,17 @@
     if (correctCount === puzzle.entries.length) {
       showMessage("כל התשובות נכונות!", "success");
       document.body.classList.add("puzzle-solved");
-      successPanel.classList.remove("hidden");
 
       if (!isLandscapePhone()) {
+        successPanel.classList.remove("hidden");
         successPanel.scrollIntoView({behavior:"smooth", block:"nearest"});
       } else {
-        /* ברוחב משאירים את התשבץ הפתור גלוי לקריאת הטור הירוק */
-        const highlightedCells = [...document.querySelectorAll(".crossword-cell.highlighted")];
-        const firstHighlighted = highlightedCells[0];
-        if (firstHighlighted) {
-          const frame = document.querySelector(".board-frame");
-          frame?.scrollTo({
-            top:0,
-            left:Math.max(0, firstHighlighted.offsetLeft - frame.clientWidth / 2),
-            behavior:"smooth"
-          });
-        }
+        successPanel.classList.add("hidden");
+        landscapeSolvedMessage?.classList.remove("hidden");
+
+        /* משאירים את אזור הלוח פתוח לגלילה ולקריאת הטור הירוק */
+        const frame = document.querySelector(".board-frame");
+        frame?.focus?.();
       }
       return;
     }
@@ -543,6 +561,7 @@
     setEntryFeedback(number, "");
     document.body.classList.remove("puzzle-solved");
     successPanel.classList.add("hidden");
+    landscapeSolvedMessage?.classList.add("hidden");
     showMessage("", "");
   }
 
@@ -571,6 +590,7 @@
     activeEntryNumber = puzzle.entries[0].number;
     document.body.classList.remove("puzzle-solved");
     successPanel.classList.add("hidden");
+    landscapeSolvedMessage?.classList.add("hidden");
     showMessage("", "");
     activateEntry(activeEntryNumber, false);
   }
