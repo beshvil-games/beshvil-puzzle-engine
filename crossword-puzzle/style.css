@@ -293,3 +293,147 @@
     margin-top:9px;
   }
 }
+
+
+/* =========================================================
+   v1.3 – תיקוני מובייל, עריכת תשובות וניווט הגדרות
+   ========================================================= */
+.mobile-clue-navigator{display:none;}
+
+.mobile-clue-counter{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  margin-bottom:8px;
+  color:var(--brand-brown);
+  font-weight:900;
+}
+
+.clue-nav-button{
+  width:42px;
+  min-width:42px;
+  height:42px;
+  min-height:42px;
+  padding:0;
+  border-radius:50%;
+  background:var(--brand-green);
+  box-shadow:none;
+  font-size:1.7rem;
+  line-height:1;
+}
+
+.mobile-clue-card{
+  width:100%;
+  min-height:74px;
+  padding:14px 18px;
+  border:1px solid rgba(79,139,59,.28);
+  border-radius:14px;
+  background:#fff;
+  color:var(--ink);
+  box-shadow:none;
+  text-align:right;
+  line-height:1.45;
+  font-size:1rem;
+  font-weight:800;
+}
+
+.mobile-clue-card:hover{
+  transform:none;
+  background:var(--brand-green-soft);
+}
+
+.board-frame{
+  touch-action:pan-y;
+  -webkit-overflow-scrolling:touch;
+}
+
+.crossword-cell,
+.crossword-cell input{touch-action:manipulation;}
+
+@media(max-width:760px) and (orientation:portrait){
+  .board-frame{
+    overflow:visible;
+    background:transparent;
+    box-shadow:none;
+    padding:2px 0;
+  }
+
+  .crossword-grid{margin-inline:auto;}
+}
+
+@media(orientation:landscape) and (max-height:620px){
+  body{overflow-y:auto;}
+
+  .app-shell{
+    display:block;
+    min-height:auto;
+  }
+
+  .brand-header,
+  .hero,
+  .site-footer{display:none;}
+
+  .crossword-card{
+    width:100%;
+    margin:0;
+    padding:8px 10px 14px;
+    border-radius:0;
+    border-inline:0;
+    box-shadow:none;
+  }
+
+  .crossword-layout{
+    grid-template-columns:minmax(290px,1fr) minmax(300px,.95fr);
+    align-items:start;
+    gap:10px;
+  }
+
+  .board-frame{
+    overflow:visible;
+    padding:0;
+    background:transparent;
+    box-shadow:none;
+  }
+
+  .board-tip{display:none;}
+
+  .clues-panel{
+    max-height:none;
+    overflow:visible;
+    padding:0;
+  }
+
+  .clues-panel .card-title{
+    margin-bottom:6px;
+    font-size:1.35rem;
+  }
+
+  .clues-list{display:none;}
+  .mobile-clue-navigator{display:block;}
+
+  .actions{margin-top:8px;}
+  .message{margin-top:6px;}
+  .success-panel{margin-top:8px;}
+}
+
+@media(orientation:landscape) and (max-height:430px){
+  .crossword-layout{
+    grid-template-columns:minmax(250px,1fr) minmax(280px,.95fr);
+  }
+
+  .mobile-clue-card{
+    min-height:60px;
+    padding:10px 13px;
+    font-size:.9rem;
+  }
+
+  .clue-nav-button{
+    width:36px;
+    min-width:36px;
+    height:36px;
+    min-height:36px;
+  }
+
+  .actions{display:none;}
+}

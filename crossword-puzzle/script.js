@@ -8,7 +8,11 @@
   const clearButton = document.getElementById("clearButton");
   const message = document.getElementById("message");
   const successPanel = document.getElementById("successPanel");
-  const revealedAnswer = document.getElementById("revealedAnswer");
+
+  const mobileClueCard = document.getElementById("mobileClueCard");
+  const mobileCluePosition = document.getElementById("mobileCluePosition");
+  const prevClueButton = document.getElementById("prevClueButton");
+  const nextClueButton = document.getElementById("nextClueButton");
 
   if (!puzzle || !Array.isArray(puzzle.entries) || !puzzle.entries.length) {
     showMessage("קובץ נתוני התשבץ לא נטען.", "error");
@@ -22,7 +26,10 @@
   const rowCount = Math.max(...puzzle.entries.map(entry => entry.row)) + 1;
   const entryByNumber = new Map(puzzle.entries.map(entry => [entry.number, entry]));
   const cellMap = new Map();
-  let activeEntryNumber = null;
+
+  let activeEntryNumber = puzzle.entries[0].number;
+  let activeEntryIndex = 0;
+  let replaceMode = false;
 
   grid.style.gridTemplateColumns = `repeat(${puzzle.columns}, var(--cell-size))`;
   grid.style.gridTemplateRows = `repeat(${rowCount}, var(--cell-size))`;
@@ -30,16 +37,18 @@
   renderGrid();
   renderClues();
   resizeBoard();
+  activateEntry(activeEntryNumber, false);
 
   window.addEventListener("resize", resizeBoard);
-  window.addEventListener("orientationchange", () => setTimeout(resizeBoard, 120));
+  window.addEventListener("orientationchange", () => setTimeout(resizeBoard, 140));
+  window.visualViewport?.addEventListener("resize", handleViewportResize);
 
   function renderGrid() {
     const occupied = new Map();
 
     puzzle.entries.forEach(entry => {
       [...entry.answer].forEach((letter, index) => {
-        occupied.set(`${entry.row}-${entry.start + index}`, {entry, index, letter});
+        occupied.set(`${entry.row}-${entry.start + index}`, {entry, index});
       });
     });
 
@@ -78,8 +87,17 @@
         input.maxLength = info.entry.answer.length;
         input.setAttribute("aria-label", `תשובה ${info.entry.number}, אות ${info.index + 1}`);
 
-        input.addEventListener("focus", () => activateEntry(info.entry.number, false));
-        input.addEventListener("click", () => activateEntry(info.entry.number, false));
+        input.addEventListener("focus", () => {
+          activeEntryIndex = puzzle.entries.findIndex(item => item.number === info.entry.number);
+          activateEntry(info.entry.number, false);
+          replaceMode = Boolean(input.value);
+          keepFocusedCellVisible(wrapper);
+        });
+
+        input.addEventListener("pointerdown", () => {
+          replaceMode = Boolean(input.value);
+        });
+
         input.addEventListener("input", event => handleInput(event, info.entry, info.index));
         input.addEventListener("keydown", event => handleKeydown(event, info.entry, info.index));
         input.addEventListener("paste", event => handlePaste(event, info.entry, info.index));
@@ -92,13 +110,12 @@
   }
 
   function renderClues() {
-    puzzle.entries.forEach(entry => {
+    puzzle.entries.forEach((entry, position) => {
       const item = document.createElement("li");
       item.className = "clue-item";
       item.dataset.number = entry.number;
       item.tabIndex = 0;
       item.setAttribute("role", "button");
-      item.setAttribute("aria-label", `הגדרה ${entry.number}: ${entry.clue}`);
 
       const number = document.createElement("span");
       number.className = "clue-number";
@@ -109,36 +126,82 @@
       text.textContent = entry.clue;
 
       item.append(number, text);
-      item.addEventListener("click", () => activateEntry(entry.number, true));
+
+      const choose = () => {
+        activeEntryIndex = position;
+        activateEntry(entry.number, true);
+      };
+
+      item.addEventListener("click", choose);
       item.addEventListener("keydown", event => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
-          activateEntry(entry.number, true);
+          choose();
         }
       });
 
       cluesList.appendChild(item);
     });
+
+    prevClueButton?.addEventListener("click", () => moveClue(-1));
+    nextClueButton?.addEventListener("click", () => moveClue(1));
+    mobileClueCard?.addEventListener("click", () => activateEntry(activeEntryNumber, true));
+    updateMobileClue();
+  }
+
+  function moveClue(direction) {
+    activeEntryIndex =
+      (activeEntryIndex + direction + puzzle.entries.length) % puzzle.entries.length;
+
+    const entry = puzzle.entries[activeEntryIndex];
+    activateEntry(entry.number, true);
+  }
+
+  function updateMobileClue() {
+    const entry = puzzle.entries[activeEntryIndex];
+    if (!entry || !mobileClueCard || !mobileCluePosition) return;
+
+    mobileCluePosition.textContent = `${activeEntryIndex + 1} מתוך ${puzzle.entries.length}`;
+    mobileClueCard.textContent = `${entry.number}. ${entry.clue}`;
   }
 
   function resizeBoard() {
     const frame = document.querySelector(".board-frame");
     if (!frame) return;
 
-    const availableWidth = Math.max(250, frame.clientWidth - 14);
-    const availableHeight = window.matchMedia("(orientation: landscape) and (max-height: 620px)").matches
-      ? Math.max(220, window.innerHeight * .67)
+    const landscapePhone =
+      window.matchMedia("(orientation: landscape) and (max-height: 620px)").matches;
+
+    const availableWidth = landscapePhone
+      ? Math.max(250, frame.clientWidth - 4)
+      : Math.max(250, frame.clientWidth - 14);
+
+    const availableHeight = landscapePhone
+      ? Math.max(170, (window.visualViewport?.height || window.innerHeight) - 32)
       : 620;
 
     const byWidth = Math.floor(availableWidth / puzzle.columns);
     const byHeight = Math.floor(availableHeight / rowCount);
-    const cellSize = Math.max(24, Math.min(44, byWidth, byHeight));
+    const maxSize = landscapePhone ? 34 : 44;
+    const minSize = landscapePhone ? 22 : 24;
+    const cellSize = Math.max(minSize, Math.min(maxSize, byWidth, byHeight));
 
     grid.style.setProperty("--cell-size", `${cellSize}px`);
   }
 
+  function handleViewportResize() {
+    resizeBoard();
+
+    const focused = document.activeElement;
+    if (focused?.matches(".crossword-cell input")) {
+      const wrapper = focused.closest(".crossword-cell");
+      setTimeout(() => keepFocusedCellVisible(wrapper), 80);
+    }
+  }
+
   function activateEntry(number, focusFirstEmpty) {
     activeEntryNumber = number;
+    activeEntryIndex = puzzle.entries.findIndex(entry => entry.number === number);
 
     document.querySelectorAll(".crossword-cell").forEach(cell => {
       cell.classList.toggle("active-entry", Number(cell.dataset.entry) === number);
@@ -147,6 +210,8 @@
     document.querySelectorAll(".clue-item").forEach(item => {
       item.classList.toggle("active", Number(item.dataset.number) === number);
     });
+
+    updateMobileClue();
 
     if (!focusFirstEmpty) return;
 
@@ -165,11 +230,19 @@
   }
 
   function handleInput(event, entry, index) {
-    const letters = normalizeLetters(event.target.value);
+    const input = event.target;
+    const letters = normalizeLetters(input.value);
     clearEntryFeedback(entry.number);
 
     if (!letters) {
-      event.target.value = "";
+      input.value = "";
+      replaceMode = false;
+      return;
+    }
+
+    if (replaceMode) {
+      input.value = letters.at(-1);
+      replaceMode = false;
       return;
     }
 
@@ -182,6 +255,7 @@
 
     event.preventDefault();
     clearEntryFeedback(entry.number);
+    replaceMode = false;
     fillFrom(entry, index, letters);
   }
 
@@ -199,8 +273,11 @@
       }
     });
 
-    const nextIndex = Math.min(lastIndex + 1, entry.answer.length - 1);
-    focusCell(entry.number, nextIndex, false);
+    if (lastIndex < entry.answer.length - 1) {
+      focusCell(entry.number, lastIndex + 1, false);
+    } else {
+      focusCell(entry.number, lastIndex, false);
+    }
   }
 
   function handleKeydown(event, entry, index) {
@@ -211,11 +288,13 @@
 
       if (current.input.value) {
         current.input.value = "";
+        replaceMode = false;
       } else if (index > 0) {
         event.preventDefault();
         const previous = getCell(entry.number, index - 1);
         previous.input.value = "";
         previous.input.focus();
+        replaceMode = false;
       }
       return;
     }
@@ -223,6 +302,7 @@
     if (event.key === "Delete") {
       current.input.value = "";
       clearEntryFeedback(entry.number);
+      replaceMode = false;
       return;
     }
 
@@ -248,9 +328,7 @@
 
     if (event.key === "Enter") {
       event.preventDefault();
-      const currentPosition = puzzle.entries.findIndex(item => item.number === entry.number);
-      const next = puzzle.entries[(currentPosition + 1) % puzzle.entries.length];
-      activateEntry(next.number, true);
+      moveClue(1);
     }
   }
 
@@ -258,15 +336,23 @@
     const cell = getCell(number, index);
     if (!cell) return;
 
+    replaceMode = Boolean(cell.input.value);
     cell.input.focus({preventScroll:true});
 
-    if (scroll) {
-      cell.wrapper.scrollIntoView({
-        behavior:"smooth",
-        block:"nearest",
-        inline:"nearest"
-      });
-    }
+    if (scroll) keepFocusedCellVisible(cell.wrapper);
+  }
+
+  function keepFocusedCellVisible(wrapper) {
+    if (!wrapper) return;
+
+    const landscapePhone =
+      window.matchMedia("(orientation: landscape) and (max-height: 620px)").matches;
+
+    wrapper.scrollIntoView({
+      behavior:"smooth",
+      block:landscapePhone ? "center" : "nearest",
+      inline:"nearest"
+    });
   }
 
   function getCell(number, index) {
@@ -274,7 +360,9 @@
   }
 
   function getTypedAnswer(entry) {
-    return [...entry.answer].map((_, index) => getCell(entry.number, index)?.input.value || "").join("");
+    return [...entry.answer]
+      .map((_, index) => getCell(entry.number, index)?.input.value || "")
+      .join("");
   }
 
   function checkAnswers() {
@@ -285,7 +373,8 @@
     puzzle.entries.forEach(entry => {
       const typed = getTypedAnswer(entry);
       const isComplete = typed.length === entry.answer.length;
-      const isCorrect = isComplete && typed === entry.answer;
+      const isCorrect = isComplete &&
+        normalizeFinalLetters(typed) === normalizeFinalLetters(entry.answer);
 
       if (isCorrect) {
         correctCount += 1;
@@ -300,12 +389,7 @@
     });
 
     if (correctCount === puzzle.entries.length) {
-      const hiddenMessage = puzzle.entries
-        .map(entry => entry.answer[entry.highlightIndex] || "")
-        .join("");
-
       showMessage("כל התשובות נכונות!", "success");
-      revealedAnswer.textContent = hiddenMessage;
       successPanel.classList.remove("hidden");
       successPanel.scrollIntoView({behavior:"smooth", block:"nearest"});
       return;
@@ -318,8 +402,17 @@
         `${correctCount} תשובות נכונות. יש ${wrongCount} תשובות שצריך לבדוק שוב.`,
         "error"
       );
-      const firstWrong = puzzle.entries.find(entry => getTypedAnswer(entry).length === entry.answer.length && getTypedAnswer(entry) !== entry.answer);
-      if (firstWrong) activateEntry(firstWrong.number, false);
+
+      const firstWrong = puzzle.entries.find(entry => {
+        const typed = getTypedAnswer(entry);
+        return typed.length === entry.answer.length &&
+          normalizeFinalLetters(typed) !== normalizeFinalLetters(entry.answer);
+      });
+
+      if (firstWrong) {
+        activeEntryIndex = puzzle.entries.findIndex(entry => entry.number === firstWrong.number);
+        activateEntry(firstWrong.number, false);
+      }
     } else {
       showMessage(
         `${correctCount} תשובות נכונות. נשארו ${incompleteCount} תשובות להשלים.`,
@@ -358,14 +451,25 @@
       item.classList.remove("correct", "incorrect", "active");
     });
 
-    activeEntryNumber = null;
+    activeEntryIndex = 0;
+    activeEntryNumber = puzzle.entries[0].number;
     successPanel.classList.add("hidden");
-    revealedAnswer.textContent = "";
     showMessage("", "");
+    activateEntry(activeEntryNumber, false);
   }
 
   function normalizeLetters(value) {
-    return [...String(value).replace(/[^\u0590-\u05FF]/g, "")].join("");
+    return [...String(value).replace(/[^\u0590-\u05FF]/g, "")]
+      .map(normalizeSingleFinalLetter)
+      .join("");
+  }
+
+  function normalizeSingleFinalLetter(letter) {
+    return ({"ך":"כ","ם":"מ","ן":"נ","ף":"פ","ץ":"צ"})[letter] || letter;
+  }
+
+  function normalizeFinalLetters(value) {
+    return [...String(value)].map(normalizeSingleFinalLetter).join("");
   }
 
   function showMessage(text, type) {

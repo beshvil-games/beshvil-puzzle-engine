@@ -33,6 +33,16 @@
 
         <section class="clues-panel" aria-label="הגדרות התשבץ">
           <h2 class="card-title">הגדרות</h2>
+
+          <div id="mobileClueNavigator" class="mobile-clue-navigator" aria-live="polite">
+            <div class="mobile-clue-counter">
+              <button id="prevClueButton" class="clue-nav-button" type="button" aria-label="להגדרה הקודמת">‹</button>
+              <span id="mobileCluePosition"></span>
+              <button id="nextClueButton" class="clue-nav-button" type="button" aria-label="להגדרה הבאה">›</button>
+            </div>
+            <button id="mobileClueCard" class="mobile-clue-card" type="button"></button>
+          </div>
+
           <ol id="cluesList" class="clues-list"></ol>
         </section>
       </div>
@@ -47,7 +57,7 @@
       <section id="successPanel" class="success-panel hidden" aria-live="polite">
         <h2>כל הכבוד!</h2>
         <p>פתרתם את התשבץ. הטור הירוק מגלה את התחנה הבאה:</p>
-        <p id="revealedAnswer" class="revealed-answer"></p>
+        
       </section>
     </section>
 
