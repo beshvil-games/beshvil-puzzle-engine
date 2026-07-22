@@ -2,26 +2,26 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#fbf7ed">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#4f8b3b">
   <title>תפזורת | בשביל החוויה</title>
-  <link rel="stylesheet" href="../shared.css">
+
+  <!-- העיצוב המשותף נמצא בתיקיית assets הראשית -->
+  <link rel="stylesheet" href="../assets/shared.css">
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-  <main class="app-shell">
-    <header class="brand-header" aria-label="בשביל החוויה">
+  <main class="app-shell word-search-shell">
+    <header class="brand-header">
       <img
-        id="brandLogo"
         class="brand-logo"
-        src="../logo.png"
-        alt="בשביל החוויה"
-        data-fallbacks="../logo.webp,../assets/logo.png,../assets/logo.webp"
-      >
+        src="../assets/logo.png"
+        alt="בשביל החוויה – אירועים בדרך אחרת">
     </header>
 
-    <section class="hero" aria-labelledby="gameTitle">
-      <h1 id="gameTitle" class="game-title">תפזורת</h1>
+    <section class="hero word-search-hero" aria-labelledby="gameTitle">
+      <h1 id="gameTitle" class="game-title"></h1>
       <p id="gameSubtitle" class="game-subtitle"></p>
       <p id="gameInstructions" class="instructions"></p>
     </section>
@@ -29,7 +29,11 @@
     <section class="game-card word-search-card" aria-label="משחק תפזורת">
       <div class="game-toolbar">
         <p id="progressText" class="progress-text" aria-live="polite"></p>
-        <button id="resetButton" class="btn btn-secondary reset-button" type="button">
+
+        <button
+          id="resetButton"
+          class="btn btn-secondary reset-button"
+          type="button">
           התחלה מחדש
         </button>
       </div>
@@ -39,24 +43,34 @@
           id="letterGrid"
           class="letter-grid"
           role="grid"
-          aria-label="רשת אותיות. גררו בקו ישר כדי לסמן מדינה"
-        ></div>
+          aria-label="רשת אותיות. גררו בקו ישר כדי לסמן מילה">
+        </div>
       </div>
 
-      <p id="statusText" class="status-text" aria-live="polite" aria-atomic="true"></p>
+      <p
+        id="statusText"
+        class="status-text"
+        aria-live="polite"
+        aria-atomic="true">
+      </p>
 
-      <section id="successPanel" class="success-panel hidden" aria-live="polite">
-        <h2 id="successTitle">כל הכבוד!</h2>
+      <section
+        id="successPanel"
+        class="success-panel word-search-success hidden"
+        aria-live="polite">
+        <h2 id="successTitle"></h2>
         <p id="successMessage"></p>
       </section>
 
-      <section id="errorPanel" class="data-error hidden" role="alert">
+      <section id="dataError" class="data-error hidden" role="alert">
         <h2>לא ניתן לפתוח את התפזורת</h2>
-        <p id="errorMessage"></p>
+        <p id="dataErrorText"></p>
       </section>
     </section>
 
-    <footer class="site-footer">בשביל החוויה – הופכים ערכים לחוויות</footer>
+    <footer class="site-footer">
+      © 2026 בשביל החוויה – אירועים בדרך אחרת. כל הזכויות שמורות.
+    </footer>
   </main>
 
   <script src="puzzle-data.js"></script>

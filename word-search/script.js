@@ -3,7 +3,7 @@
 
   const data = window.PUZZLE_DATA;
 
-  const elements = {
+  const ui = {
     grid: document.getElementById("letterGrid"),
     title: document.getElementById("gameTitle"),
     subtitle: document.getElementById("gameSubtitle"),
@@ -14,8 +14,8 @@
     successPanel: document.getElementById("successPanel"),
     successTitle: document.getElementById("successTitle"),
     successMessage: document.getElementById("successMessage"),
-    errorPanel: document.getElementById("errorPanel"),
-    errorMessage: document.getElementById("errorMessage")
+    dataError: document.getElementById("dataError"),
+    dataErrorText: document.getElementById("dataErrorText")
   };
 
   const state = {
@@ -23,8 +23,8 @@
     cols: 0,
     cells: [],
     words: [],
-    foundWordIds: new Set(),
-    foundCellKeys: new Set(),
+    foundIds: new Set(),
+    foundCellUsage: new Map(),
     pointerId: null,
     start: null,
     path: [],
@@ -32,30 +32,35 @@
     statusTimer: null
   };
 
+  const directions = [
+    { dr:-1, dc:-1 }, { dr:-1, dc:0 }, { dr:-1, dc:1 },
+    { dr:0,  dc:-1 },                    { dr:0,  dc:1 },
+    { dr:1,  dc:-1 }, { dr:1,  dc:0 },  { dr:1,  dc:1 }
+  ];
+
   try {
-    prepareGame();
+    initialise();
   } catch (error) {
     showDataError(error);
   }
 
-  function prepareGame() {
-    validateBaseData();
+  function initialise() {
+    validateData();
 
     state.rows = data.grid.length;
     state.cols = data.grid[0].length;
-    state.words = data.words.map((word, index) => prepareWord(word, index));
+    state.words = data.words.map((entry, index) => prepareWord(entry, index));
 
-    validateExpectedRemainingText();
-    fillHeadings();
+    validateRemainingText();
+    fillText();
     buildGrid();
     bindEvents();
     updateProgress();
-    setupLogoFallback();
   }
 
-  function validateBaseData() {
+  function validateData() {
     if (!data || typeof data !== "object") {
-      throw new Error("לא נמצא הקובץ puzzle-data.js.");
+      throw new Error("לא נמצא קובץ הנתונים puzzle-data.js.");
     }
 
     if (!Array.isArray(data.grid) || data.grid.length === 0) {
@@ -63,8 +68,13 @@
     }
 
     const width = Array.isArray(data.grid[0]) ? data.grid[0].length : 0;
-    if (!width || !data.grid.every(row => Array.isArray(row) && row.length === width)) {
-      throw new Error("כל שורות הרשת חייבות להכיל אותו מספר אותיות.");
+
+    if (!width || !data.grid.every(row =>
+      Array.isArray(row) &&
+      row.length === width &&
+      row.every(letter => String(letter).trim() !== "")
+    )) {
+      throw new Error("כל שורות הרשת חייבות להכיל אותו מספר אותיות, ללא תאים ריקים.");
     }
 
     if (!Array.isArray(data.words) || data.words.length === 0) {
@@ -72,64 +82,120 @@
     }
   }
 
-  function prepareWord(word, index) {
-    if (!word || !Array.isArray(word.start) || !Array.isArray(word.end)) {
-      throw new Error(`חסרות נקודות התחלה וסיום במילה מספר ${index + 1}.`);
-    }
+  function prepareWord(entry, index) {
+    const item = typeof entry === "string"
+      ? { display:entry, answer:entry }
+      : { ...entry };
 
-    const start = pointFromArray(word.start);
-    const end = pointFromArray(word.end);
-    const path = makeExactPath(start, end);
-    const answer = normalizeText(word.answer || word.display || "");
-    const gridText = normalizeText(path.map(getLetter).join(""));
+    const display = item.display || item.answer;
+    const answer = normalize(item.answer || item.display || "");
 
-    if (!answer) {
+    if (!display || !answer) {
       throw new Error(`המילה מספר ${index + 1} ריקה.`);
     }
 
-    if (gridText !== answer && reverseText(gridText) !== answer) {
-      throw new Error(`המיקום שהוגדר עבור „${word.display || answer}” אינו תואם לאותיות ברשת.`);
+    let path;
+
+    if (item.placement?.start && item.placement?.end) {
+      path = exactPath(
+        arrayToPoint(item.placement.start),
+        arrayToPoint(item.placement.end)
+      );
+
+      const letters = normalize(path.map(getLetter).join(""));
+      if (letters !== answer && reverse(letters) !== answer) {
+        throw new Error(`המיקום שהוגדר עבור „${display}” אינו תואם לרשת.`);
+      }
+    } else {
+      const matches = findWord(answer);
+
+      if (matches.length === 0) {
+        throw new Error(`לא מצאתי ברשת את „${display}”.`);
+      }
+
+      if (matches.length > 1) {
+        throw new Error(
+          `„${display}” מופיעה ברשת יותר מפעם אחת. יש להוסיף לה placement בקובץ הנתונים.`
+        );
+      }
+
+      path = matches[0];
     }
 
     return {
-      id: index,
-      display: word.display || word.answer,
+      id:index,
+      display:String(display),
       answer,
       path,
-      pathKey: canonicalPathKey(path)
+      pathKey:canonicalPathKey(path)
     };
   }
 
-  function validateExpectedRemainingText() {
+  function findWord(answer) {
+    const matches = [];
+
+    for (let row = 0; row < state.rows; row += 1) {
+      for (let col = 0; col < state.cols; col += 1) {
+        directions.forEach(direction => {
+          const path = [];
+          let text = "";
+
+          for (let step = 0; step < answer.length; step += 1) {
+            const point = {
+              row:row + direction.dr * step,
+              col:col + direction.dc * step
+            };
+
+            if (!inside(point)) return;
+
+            path.push(point);
+            text += normalize(getLetter(point));
+          }
+
+          if (text === answer) matches.push(path);
+        });
+      }
+    }
+
+    return matches;
+  }
+
+  function validateRemainingText() {
     if (!data.expectedRemainingText) return;
 
-    const solutionCells = new Set();
-    state.words.forEach(word => {
-      word.path.forEach(point => solutionCells.add(cellKey(point)));
-    });
+    const used = new Set();
+    state.words.forEach(word =>
+      word.path.forEach(point => used.add(cellKey(point)))
+    );
 
-    const actual = normalizeText(readRemainingLetters(solutionCells));
-    const expected = normalizeText(data.expectedRemainingText);
+    const actual = normalize(readRemainingLetters(used));
+    const expected = normalize(data.expectedRemainingText);
 
     if (actual !== expected) {
-      throw new Error("האותיות שנותרו אינן תואמות למשפט שהוגדר בקובץ הנתונים.");
+      throw new Error(
+        "האותיות שנותרו אינן תואמות למשפט שהוגדר בקובץ הנתונים."
+      );
     }
   }
 
-  function fillHeadings() {
-    elements.title.textContent = data.title || "תפזורת";
-    elements.subtitle.textContent = data.subtitle || "";
-    elements.instructions.textContent = data.instructions || "";
-    elements.successTitle.textContent = data.successTitle || "כל הכבוד!";
-    elements.successMessage.textContent = data.successMessage || "סיימתם את התפזורת.";
+  function fillText() {
+    ui.title.textContent = data.title || "תפזורת";
+    ui.subtitle.textContent = data.subtitle || "";
+    ui.instructions.textContent = data.instructions || "";
+    ui.successTitle.textContent = data.successTitle || "כל הכבוד!";
+    ui.successMessage.textContent =
+      data.successMessage || "סיימתם את התפזורת.";
+    document.title = `${data.title || "תפזורת"} | בשביל החוויה`;
   }
 
   function buildGrid() {
-    elements.grid.innerHTML = "";
-    elements.grid.style.setProperty("--rows", state.rows);
-    elements.grid.style.setProperty("--cols", state.cols);
-    elements.grid.setAttribute("aria-rowcount", String(state.rows));
-    elements.grid.setAttribute("aria-colcount", String(state.cols));
+    ui.grid.innerHTML = "";
+    state.cells = [];
+
+    ui.grid.style.setProperty("--rows", state.rows);
+    ui.grid.style.setProperty("--cols", state.cols);
+    ui.grid.setAttribute("aria-rowcount", String(state.rows));
+    ui.grid.setAttribute("aria-colcount", String(state.cols));
 
     data.grid.forEach((row, rowIndex) => {
       row.forEach((letter, colIndex) => {
@@ -141,144 +207,191 @@
         cell.setAttribute("role", "gridcell");
         cell.setAttribute("aria-rowindex", String(rowIndex + 1));
         cell.setAttribute("aria-colindex", String(colIndex + 1));
-        cell.setAttribute("aria-label", `שורה ${rowIndex + 1}, עמודה ${colIndex + 1}, ${letter}`);
-        elements.grid.appendChild(cell);
+        cell.setAttribute(
+          "aria-label",
+          `שורה ${rowIndex + 1}, עמודה ${colIndex + 1}, ${letter}`
+        );
+
+        ui.grid.appendChild(cell);
         state.cells.push(cell);
       });
     });
   }
 
   function bindEvents() {
-    elements.grid.addEventListener("pointerdown", onPointerDown, { passive: false });
-    elements.grid.addEventListener("pointermove", onPointerMove, { passive: false });
-    elements.grid.addEventListener("pointerup", onPointerUp, { passive: false });
-    elements.grid.addEventListener("pointercancel", cancelSelection, { passive: false });
-    elements.grid.addEventListener("lostpointercapture", cancelSelection);
-    elements.grid.addEventListener("contextmenu", event => event.preventDefault());
-    elements.reset.addEventListener("click", resetGame);
+    ui.grid.addEventListener("pointerdown", pointerDown, { passive:false });
+    ui.grid.addEventListener("pointermove", pointerMove, { passive:false });
+    ui.grid.addEventListener("pointerup", pointerUp, { passive:false });
+    ui.grid.addEventListener("pointercancel", cancelSelection, { passive:false });
+    ui.grid.addEventListener("lostpointercapture", lostCapture);
+    ui.grid.addEventListener("contextmenu", event => event.preventDefault());
+    ui.reset.addEventListener("click", resetGame);
   }
 
-  function onPointerDown(event) {
+  function pointerDown(event) {
     if (state.completed) return;
     if (event.pointerType === "mouse" && event.button !== 0) return;
 
-    const cell = cellFromEvent(event);
-    if (!cell) return;
+    const cell = event.target.closest?.(".letter-cell");
+    if (!cell || !ui.grid.contains(cell)) return;
 
     event.preventDefault();
-    clearStatusSoon(0);
+    clearStatus();
 
     state.pointerId = event.pointerId;
     state.start = pointFromCell(cell);
     state.path = [state.start];
 
-    elements.grid.setPointerCapture?.(event.pointerId);
-    paintSelection();
+    ui.grid.setPointerCapture?.(event.pointerId);
+    paintPath();
   }
 
-  function onPointerMove(event) {
-    if (state.pointerId === null || event.pointerId !== state.pointerId) return;
+  function pointerMove(event) {
+    if (event.pointerId !== state.pointerId || !state.start) return;
+
     event.preventDefault();
 
-    const cell = cellFromCoordinates(event.clientX, event.clientY);
+    const cell = cellAt(event.clientX, event.clientY);
     if (!cell) return;
 
-    const end = pointFromCell(cell);
-    state.path = makeSnappedPath(state.start, end);
-    paintSelection();
+    state.path = snappedPath(state.start, pointFromCell(cell));
+    paintPath();
   }
 
-  function onPointerUp(event) {
-    if (state.pointerId === null || event.pointerId !== state.pointerId) return;
+  function pointerUp(event) {
+    if (event.pointerId !== state.pointerId || !state.start) return;
+
     event.preventDefault();
 
-    const cell = cellFromCoordinates(event.clientX, event.clientY);
+    const cell = cellAt(event.clientX, event.clientY);
     if (cell) {
-      state.path = makeSnappedPath(state.start, pointFromCell(cell));
+      state.path = snappedPath(state.start, pointFromCell(cell));
     }
 
-    evaluateSelection();
-    endPointerSession();
+    evaluatePath();
+    finishPointer();
   }
 
   function cancelSelection(event) {
     if (state.pointerId === null) return;
     if (event?.pointerId !== undefined && event.pointerId !== state.pointerId) return;
-    clearSelectionPaint();
-    endPointerSession();
+
+    clearPathPaint();
+    finishPointer();
   }
 
-  function evaluateSelection() {
+  function lostCapture(event) {
+    if (event.pointerId !== state.pointerId) return;
+    if (state.path.length > 1) evaluatePath();
+    else clearPathPaint();
+    finishPointer(false);
+  }
+
+  function evaluatePath() {
     if (state.path.length < 2) {
-      clearSelectionPaint();
+      clearPathPaint();
       return;
     }
 
     const selectedKey = canonicalPathKey(state.path);
-    const match = state.words.find(word =>
-      !state.foundWordIds.has(word.id) && word.pathKey === selectedKey
-    );
+    const word = state.words.find(item => item.pathKey === selectedKey);
 
-    if (match) {
-      acceptWord(match);
-    } else {
-      rejectSelection();
+    if (!word) {
+      rejectPath();
+      return;
     }
+
+    if (state.foundIds.has(word.id)) {
+      clearPathPaint();
+      showStatus(
+        data.feedback?.alreadyFound || "את המילה הזאת כבר מצאתם.",
+        "error"
+      );
+      return;
+    }
+
+    acceptWord(word);
   }
 
   function acceptWord(word) {
-    state.foundWordIds.add(word.id);
+    clearPathPaint();
+    state.foundIds.add(word.id);
 
     word.path.forEach(point => {
-      state.foundCellKeys.add(cellKey(point));
+      const key = cellKey(point);
+      const useCount = (state.foundCellUsage.get(key) || 0) + 1;
+      state.foundCellUsage.set(key, useCount);
       getCell(point).classList.add("is-found");
     });
 
-    showStatus(`נכון! מצאתם את ${word.display}`, "success");
+    const template =
+      data.feedback?.correct || "נכון! מצאתם את {word}";
+
+    showStatus(template.replace("{word}", word.display), "success");
     updateProgress();
 
-    if (state.foundWordIds.size === state.words.length) {
+    if (state.foundIds.size === state.words.length) {
       completeGame();
     }
   }
 
-  function rejectSelection() {
+  function rejectPath() {
     const selectedCells = state.path.map(getCell);
+
+    clearPathPaint();
     selectedCells.forEach(cell => cell.classList.add("is-wrong"));
-    showStatus("זו אינה אחת המדינות. נסו שוב.", "error");
+
+    showStatus(
+      data.feedback?.wrong || "זו אינה אחת המילים. נסו שוב.",
+      "error"
+    );
 
     window.setTimeout(() => {
       selectedCells.forEach(cell => cell.classList.remove("is-wrong"));
-    }, 420);
+    }, 430);
   }
 
   function completeGame() {
     state.completed = true;
-    clearSelectionPaint();
+    clearPathPaint();
 
     state.cells.forEach((cell, index) => {
-      const point = { row: Math.floor(index / state.cols), col: index % state.cols };
-      if (state.foundCellKeys.has(cellKey(point))) {
+      const point = {
+        row:Math.floor(index / state.cols),
+        col:index % state.cols
+      };
+
+      if (state.foundCellUsage.has(cellKey(point))) {
         cell.classList.add("is-complete-found");
       } else {
         cell.classList.add("is-remaining");
       }
     });
 
-    elements.successPanel.classList.remove("hidden");
-    elements.successPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    ui.status.textContent = "";
+    ui.status.className = "status-text";
+    ui.successPanel.classList.remove("hidden");
+
+    window.setTimeout(() => {
+      ui.successPanel.scrollIntoView({
+        behavior:"smooth",
+        block:"nearest"
+      });
+    }, 60);
   }
 
   function resetGame() {
-    state.foundWordIds.clear();
-    state.foundCellKeys.clear();
-    state.completed = false;
+    window.clearTimeout(state.statusTimer);
+
+    state.foundIds.clear();
+    state.foundCellUsage.clear();
     state.pointerId = null;
     state.start = null;
     state.path = [];
+    state.completed = false;
 
-    clearStatusSoon(0);
-    elements.successPanel.classList.add("hidden");
+    ui.successPanel.classList.add("hidden");
+    clearStatus();
 
     state.cells.forEach(cell => {
       cell.classList.remove(
@@ -293,138 +406,158 @@
     updateProgress();
   }
 
-  function makeExactPath(start, end) {
-    assertPointInsideGrid(start);
-    assertPointInsideGrid(end);
-
-    const rowDelta = end.row - start.row;
-    const colDelta = end.col - start.col;
-    const rowStep = Math.sign(rowDelta);
-    const colStep = Math.sign(colDelta);
-
-    const isStraight = rowDelta === 0 || colDelta === 0 || Math.abs(rowDelta) === Math.abs(colDelta);
-    if (!isStraight) {
-      throw new Error("כל מילה חייבת להופיע בקו ישר: אופקי, אנכי או אלכסוני.");
-    }
-
-    const steps = Math.max(Math.abs(rowDelta), Math.abs(colDelta));
-    return Array.from({ length: steps + 1 }, (_, index) => ({
-      row: start.row + rowStep * index,
-      col: start.col + colStep * index
-    }));
-  }
-
-  function makeSnappedPath(start, hovered) {
+  function snappedPath(start, hovered) {
     const rowDelta = hovered.row - start.row;
     const colDelta = hovered.col - start.col;
 
     if (rowDelta === 0 && colDelta === 0) return [start];
 
-    const directions = [
-      { dr: 0, dc: 1 },
-      { dr: 1, dc: 1 },
-      { dr: 1, dc: 0 },
-      { dr: 1, dc: -1 },
-      { dr: 0, dc: -1 },
-      { dr: -1, dc: -1 },
-      { dr: -1, dc: 0 },
-      { dr: -1, dc: 1 }
-    ];
-
     const angle = Math.atan2(rowDelta, colDelta);
-    let bestDirection = directions[0];
-    let smallestDifference = Infinity;
+    let chosen = directions[0];
+    let smallest = Infinity;
 
     directions.forEach(direction => {
       const directionAngle = Math.atan2(direction.dr, direction.dc);
       let difference = Math.abs(angle - directionAngle);
       difference = Math.min(difference, Math.PI * 2 - difference);
 
-      if (difference < smallestDifference) {
-        smallestDifference = difference;
-        bestDirection = direction;
+      if (difference < smallest) {
+        smallest = difference;
+        chosen = direction;
       }
     });
 
-    const distance = Math.max(Math.abs(rowDelta), Math.abs(colDelta));
-    const maxDistance = maximumDistance(start, bestDirection);
-    const steps = Math.min(distance, maxDistance);
+    const rawDistance = Math.max(
+      Math.abs(rowDelta),
+      Math.abs(colDelta)
+    );
 
-    return Array.from({ length: steps + 1 }, (_, index) => ({
-      row: start.row + bestDirection.dr * index,
-      col: start.col + bestDirection.dc * index
+    const steps = Math.min(
+      rawDistance,
+      maximumSteps(start, chosen)
+    );
+
+    return Array.from({ length:steps + 1 }, (_, index) => ({
+      row:start.row + chosen.dr * index,
+      col:start.col + chosen.dc * index
     }));
   }
 
-  function maximumDistance(start, direction) {
-    let distance = 0;
-    let row = start.row + direction.dr;
-    let col = start.col + direction.dc;
+  function maximumSteps(start, direction) {
+    let steps = 0;
+    let point = {
+      row:start.row + direction.dr,
+      col:start.col + direction.dc
+    };
 
-    while (isInsideGrid({ row, col })) {
-      distance += 1;
-      row += direction.dr;
-      col += direction.dc;
+    while (inside(point)) {
+      steps += 1;
+      point = {
+        row:point.row + direction.dr,
+        col:point.col + direction.dc
+      };
     }
 
-    return distance;
+    return steps;
   }
 
-  function paintSelection() {
-    clearSelectionPaint();
-    state.path.forEach(point => getCell(point).classList.add("is-selecting"));
-  }
+  function exactPath(start, end) {
+    assertInside(start);
+    assertInside(end);
 
-  function clearSelectionPaint() {
-    state.cells.forEach(cell => cell.classList.remove("is-selecting"));
-  }
+    const rowDelta = end.row - start.row;
+    const colDelta = end.col - start.col;
+    const straight =
+      rowDelta === 0 ||
+      colDelta === 0 ||
+      Math.abs(rowDelta) === Math.abs(colDelta);
 
-  function endPointerSession() {
-    if (state.pointerId !== null && elements.grid.hasPointerCapture?.(state.pointerId)) {
-      elements.grid.releasePointerCapture?.(state.pointerId);
+    if (!straight) {
+      throw new Error("מיקום של מילה חייב להיות בקו ישר.");
     }
+
+    const dr = Math.sign(rowDelta);
+    const dc = Math.sign(colDelta);
+    const steps = Math.max(Math.abs(rowDelta), Math.abs(colDelta));
+
+    return Array.from({ length:steps + 1 }, (_, index) => ({
+      row:start.row + dr * index,
+      col:start.col + dc * index
+    }));
+  }
+
+  function paintPath() {
+    clearPathPaint();
+    state.path.forEach(point =>
+      getCell(point).classList.add("is-selecting")
+    );
+  }
+
+  function clearPathPaint() {
+    state.cells.forEach(cell =>
+      cell.classList.remove("is-selecting")
+    );
+  }
+
+  function finishPointer(releaseCapture = true) {
+    if (
+      releaseCapture &&
+      state.pointerId !== null &&
+      ui.grid.hasPointerCapture?.(state.pointerId)
+    ) {
+      ui.grid.releasePointerCapture?.(state.pointerId);
+    }
+
     state.pointerId = null;
     state.start = null;
     state.path = [];
   }
 
   function updateProgress() {
-    const noun = data.progressNoun || "מדינות";
-    elements.progress.textContent = `נמצאו ${state.foundWordIds.size} מתוך ${state.words.length} ${noun}`;
+    const noun = data.progressNoun || "מילים";
+    ui.progress.textContent =
+      `נמצאו ${state.foundIds.size} מתוך ${state.words.length} ${noun}`;
   }
 
   function showStatus(message, type) {
     window.clearTimeout(state.statusTimer);
-    elements.status.textContent = message;
-    elements.status.className = `status-text ${type === "success" ? "message-success" : "message-error"}`;
-    state.statusTimer = window.setTimeout(() => clearStatusSoon(0), 1800);
+
+    ui.status.textContent = message;
+    ui.status.className =
+      `status-text ${type === "success" ? "message-success" : "message-error"}`;
+
+    state.statusTimer = window.setTimeout(clearStatus, 1800);
   }
 
-  function clearStatusSoon(delay) {
+  function clearStatus() {
     window.clearTimeout(state.statusTimer);
-    state.statusTimer = window.setTimeout(() => {
-      elements.status.textContent = "";
-      elements.status.className = "status-text";
-    }, delay);
+    ui.status.textContent = "";
+    ui.status.className = "status-text";
   }
 
-  function readRemainingLetters(solutionCells) {
+  function readRemainingLetters(usedCells) {
     const letters = [];
     const order = data.remainingReadingOrder || "rtl-top-down";
 
     for (let row = 0; row < state.rows; row += 1) {
       if (order === "ltr-top-down") {
-        for (let col = 0; col < state.cols; col += 1) pushIfRemaining(row, col);
+        for (let col = 0; col < state.cols; col += 1) {
+          appendIfRemaining(row, col);
+        }
       } else {
-        for (let col = state.cols - 1; col >= 0; col -= 1) pushIfRemaining(row, col);
+        for (let col = state.cols - 1; col >= 0; col -= 1) {
+          appendIfRemaining(row, col);
+        }
       }
     }
 
     return letters.join("");
 
-    function pushIfRemaining(row, col) {
+    function appendIfRemaining(row, col) {
       const point = { row, col };
-      if (!solutionCells.has(cellKey(point))) letters.push(getLetter(point));
+      if (!usedCells.has(cellKey(point))) {
+        letters.push(getLetter(point));
+      }
     }
   }
 
@@ -434,7 +567,7 @@
     return forward < backward ? forward : backward;
   }
 
-  function normalizeText(value) {
+  function normalize(value) {
     return String(value)
       .trim()
       .replace(/[\s\-–—]/g, "")
@@ -446,26 +579,25 @@
       .replace(/ץ/g, "צ");
   }
 
-  function reverseText(value) {
+  function reverse(value) {
     return Array.from(value).reverse().join("");
   }
 
-  function pointFromArray(value) {
-    return { row: Number(value[0]), col: Number(value[1]) };
+  function arrayToPoint(value) {
+    return { row:Number(value[0]), col:Number(value[1]) };
   }
 
   function pointFromCell(cell) {
-    return { row: Number(cell.dataset.row), col: Number(cell.dataset.col) };
+    return {
+      row:Number(cell.dataset.row),
+      col:Number(cell.dataset.col)
+    };
   }
 
-  function cellFromEvent(event) {
-    const target = event.target.closest?.(".letter-cell");
-    return target && elements.grid.contains(target) ? target : null;
-  }
-
-  function cellFromCoordinates(x, y) {
-    const target = document.elementFromPoint(x, y)?.closest?.(".letter-cell");
-    return target && elements.grid.contains(target) ? target : null;
+  function cellAt(x, y) {
+    const element = document.elementFromPoint(x, y);
+    const cell = element?.closest?.(".letter-cell");
+    return cell && ui.grid.contains(cell) ? cell : null;
   }
 
   function getLetter(point) {
@@ -480,44 +612,32 @@
     return `${point.row}:${point.col}`;
   }
 
-  function assertPointInsideGrid(point) {
-    if (!isInsideGrid(point)) {
-      throw new Error("אחת מנקודות ההתחלה או הסיום נמצאת מחוץ לרשת.");
-    }
+  function inside(point) {
+    return (
+      Number.isInteger(point.row) &&
+      Number.isInteger(point.col) &&
+      point.row >= 0 &&
+      point.row < state.rows &&
+      point.col >= 0 &&
+      point.col < state.cols
+    );
   }
 
-  function isInsideGrid(point) {
-    return Number.isInteger(point.row) && Number.isInteger(point.col) &&
-      point.row >= 0 && point.row < state.rows &&
-      point.col >= 0 && point.col < state.cols;
+  function assertInside(point) {
+    if (!inside(point)) {
+      throw new Error("מיקום של מילה נמצא מחוץ לרשת.");
+    }
   }
 
   function showDataError(error) {
     console.error(error);
-    elements.grid?.classList.add("hidden");
-    elements.reset?.classList.add("hidden");
-    elements.progress.textContent = "";
-    elements.errorMessage.textContent = error instanceof Error ? error.message : "שגיאה לא ידועה.";
-    elements.errorPanel.classList.remove("hidden");
-  }
 
-  function setupLogoFallback() {
-    const logo = document.getElementById("brandLogo");
-    if (!logo) return;
-
-    const fallbacks = (logo.dataset.fallbacks || "")
-      .split(",")
-      .map(value => value.trim())
-      .filter(Boolean);
-
-    let index = 0;
-    logo.addEventListener("error", () => {
-      if (index < fallbacks.length) {
-        logo.src = fallbacks[index];
-        index += 1;
-      } else {
-        logo.style.visibility = "hidden";
-      }
-    });
+    ui.grid?.classList.add("hidden");
+    ui.reset?.classList.add("hidden");
+    ui.progress.textContent = "";
+    ui.status.textContent = "";
+    ui.dataErrorText.textContent =
+      error instanceof Error ? error.message : "שגיאה לא ידועה.";
+    ui.dataError.classList.remove("hidden");
   }
 })();

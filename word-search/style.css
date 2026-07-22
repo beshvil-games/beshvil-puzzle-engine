@@ -1,19 +1,28 @@
 /* =========================================================
    Beshvil Puzzle Engine – Word Search
-   עיצוב ייעודי למנוע תפזורת
+   העיצוב הכללי מגיע מ־../assets/shared.css
    ========================================================= */
 
 body{
   overscroll-behavior-y:contain;
 }
 
+.word-search-shell{
+  --word-grid-max:620px;
+}
+
+.word-search-hero .instructions{
+  margin-top:.55rem;
+}
+
 .word-search-card{
-  width:min(100%,780px);
+  width:min(100%,760px);
   margin-inline:auto;
+  align-self:start;
 }
 
 .game-toolbar{
-  min-height:46px;
+  min-height:44px;
   margin-bottom:12px;
   display:flex;
   align-items:center;
@@ -45,17 +54,23 @@ body{
 .letter-grid{
   --rows:11;
   --cols:11;
-  width:min(100%,630px,72vh);
+
+  width:min(100%,var(--word-grid-max),68vh);
   aspect-ratio:var(--cols) / var(--rows);
+
   display:grid;
   grid-template-columns:repeat(var(--cols),minmax(0,1fr));
   grid-template-rows:repeat(var(--rows),minmax(0,1fr));
   gap:clamp(2px,.45vw,5px);
+
   padding:clamp(4px,.75vw,8px);
   border:2px solid rgba(79,139,59,.36);
   border-radius:18px;
   background:rgba(79,139,59,.08);
-  box-shadow:inset 0 2px 8px rgba(71,57,38,.08);
+  box-shadow:
+    inset 0 2px 8px rgba(71,57,38,.08),
+    0 5px 16px rgba(71,57,38,.08);
+
   touch-action:none;
   user-select:none;
   -webkit-user-select:none;
@@ -67,18 +82,21 @@ body{
   position:relative;
   min-width:0;
   min-height:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+
+  display:grid;
+  place-items:center;
   overflow:hidden;
+
   border:1px solid rgba(107,73,53,.20);
   border-radius:clamp(5px,.8vw,9px);
   color:var(--ink);
   background:#fffdf8;
   box-shadow:0 1px 3px rgba(71,57,38,.08);
-  font-size:clamp(.95rem,3.2vw,1.85rem);
+
+  font-size:clamp(.95rem,3.1vw,1.85rem);
   line-height:1;
   font-weight:900;
+
   transition:
     background-color .12s ease,
     color .12s ease,
@@ -89,37 +107,39 @@ body{
 }
 
 .letter-cell.is-selecting{
-  z-index:1;
+  z-index:2;
   color:var(--brand-green-dark);
   background:#dcefd3;
-  border-color:rgba(79,139,59,.68);
+  border-color:rgba(79,139,59,.72);
   box-shadow:inset 0 0 0 2px rgba(79,139,59,.42);
-  transform:scale(.96);
+  transform:scale(.95);
 }
 
 .letter-cell.is-found{
   color:#fff;
   background:var(--brand-green);
   border-color:var(--brand-green-dark);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.24);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.25),
+    0 1px 4px rgba(53,103,42,.18);
 }
 
-/* אות שמשתתפת בשתי מילים נשארת מסומנת באופן רגיל. */
 .letter-cell.is-found.is-selecting{
   color:#fff;
   background:var(--brand-green-dark);
 }
 
 .letter-cell.is-wrong{
+  z-index:3;
   color:#fff;
   background:var(--bad);
   border-color:#b83e3a;
   animation:wrong-shake .28s ease;
 }
 
-/* בסיום: המילים שנמצאו נחלשות והאותיות שנותרו מודגשות. */
+/* בסיום המילים שנמצאו נחלשות והאותיות שנותרו בולטות */
 .letter-cell.is-complete-found{
-  opacity:.28;
+  opacity:.23;
 }
 
 .letter-cell.is-remaining{
@@ -134,8 +154,10 @@ body{
   margin:10px 0 0;
 }
 
-.success-panel{
-  margin-top:14px;
+.word-search-success{
+  max-width:620px;
+  margin:14px auto 0;
+  animation:panel-in .38s ease;
 }
 
 .data-error{
@@ -165,28 +187,45 @@ body{
   70%{transform:translateX(3px)}
 }
 
+@keyframes panel-in{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* ---------- טלפון לאורך ---------- */
+
 @media(max-width:640px) and (orientation:portrait){
+  .word-search-shell{
+    gap:7px;
+  }
+
+  .word-search-hero .instructions{
+    margin-top:.35rem;
+    font-size:.88rem;
+    line-height:1.35;
+  }
+
   .word-search-card{
-    padding:9px;
+    padding:8px;
   }
 
   .game-toolbar{
-    min-height:38px;
-    margin-bottom:7px;
+    min-height:36px;
+    margin-bottom:6px;
   }
 
   .progress-text{
-    font-size:.95rem;
+    font-size:.92rem;
   }
 
   .reset-button{
-    min-height:36px;
-    padding:6px 10px;
-    font-size:.78rem;
+    min-height:34px;
+    padding:5px 9px;
+    font-size:.76rem;
   }
 
   .letter-grid{
-    width:min(100%,94vw);
+    width:min(100%,calc(100vw - 34px));
     gap:2px;
     padding:3px;
     border-radius:13px;
@@ -194,54 +233,141 @@ body{
 
   .letter-cell{
     border-radius:5px;
-    font-size:clamp(.9rem,5vw,1.35rem);
+    font-size:clamp(.92rem,5vw,1.32rem);
   }
 
   .status-text{
-    font-size:.9rem;
+    margin-top:6px;
+    font-size:.86rem;
+  }
+
+  .word-search-success{
+    margin-top:8px;
+    padding:11px 13px;
   }
 }
 
+/* ---------- טלפון לרוחב ---------- */
+
 @media(orientation:landscape) and (max-height:620px){
-  .word-search-card{
-    width:min(100%,900px);
+  .word-search-shell{
+    width:100%;
+    max-width:none;
+    grid-template-columns:minmax(210px,1fr) auto;
+    grid-template-rows:auto 1fr auto;
+    column-gap:12px;
+    row-gap:5px;
     padding:8px 12px;
   }
 
+  .brand-header{
+    grid-column:1 / -1;
+    min-height:34px;
+  }
+
+  .brand-logo{
+    width:106px;
+  }
+
+  .word-search-hero{
+    grid-column:1;
+    grid-row:2;
+    align-self:center;
+    padding:0 6px;
+  }
+
+  .word-search-hero .game-title{
+    font-size:clamp(1.45rem,4.1vw,2.2rem);
+  }
+
+  .word-search-hero .game-subtitle{
+    font-size:.9rem;
+  }
+
+  .word-search-hero .instructions{
+    margin-top:.35rem;
+    font-size:.78rem;
+    line-height:1.35;
+  }
+
+  .word-search-card{
+    grid-column:2;
+    grid-row:2;
+    width:auto;
+    padding:7px 9px;
+  }
+
   .game-toolbar{
-    min-height:32px;
-    margin-bottom:4px;
+    min-height:29px;
+    margin-bottom:3px;
   }
 
   .progress-text{
-    font-size:.88rem;
+    font-size:.78rem;
   }
 
   .reset-button{
-    min-height:31px;
-    padding:4px 9px;
-    font-size:.74rem;
+    min-height:28px;
+    padding:3px 8px;
+    font-size:.68rem;
   }
 
   .letter-grid{
-    width:min(69vh,560px);
+    width:min(72vh,520px);
     gap:2px;
     padding:3px;
-    border-radius:12px;
+    border-radius:11px;
   }
 
   .letter-cell{
     border-radius:4px;
-    font-size:clamp(.82rem,3.55vh,1.3rem);
+    font-size:clamp(.78rem,3.45vh,1.25rem);
   }
 
   .status-text{
-    margin-top:4px;
-    font-size:.8rem;
+    min-height:1.2em;
+    margin-top:3px;
+    font-size:.72rem;
   }
 
-  .success-panel{
-    margin-top:6px;
-    padding:9px 13px;
+  .word-search-success{
+    margin-top:4px;
+    padding:7px 10px;
+  }
+
+  .word-search-success h2{
+    margin-bottom:3px;
+    font-size:1.25rem;
+  }
+
+  .word-search-success p{
+    font-size:.82rem;
+  }
+
+  .site-footer{
+    grid-column:1 / -1;
+    grid-row:3;
+    padding-top:5px;
+    font-size:.68rem;
+  }
+}
+
+@media(max-width:760px) and (orientation:landscape) and (max-height:480px){
+  .word-search-shell{
+    grid-template-columns:minmax(175px,.8fr) auto;
+  }
+
+  .word-search-hero .instructions{
+    font-size:.7rem;
+  }
+
+  .letter-grid{
+    width:min(68vh,410px);
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .word-search-success{
+    animation:none;
   }
 }
