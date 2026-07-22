@@ -481,8 +481,24 @@
 
     if (correctCount === puzzle.entries.length) {
       showMessage("כל התשובות נכונות!", "success");
+      document.body.classList.add("puzzle-solved");
       successPanel.classList.remove("hidden");
-      successPanel.scrollIntoView({behavior:"smooth", block:"nearest"});
+
+      if (!isLandscapePhone()) {
+        successPanel.scrollIntoView({behavior:"smooth", block:"nearest"});
+      } else {
+        /* ברוחב משאירים את התשבץ הפתור גלוי לקריאת הטור הירוק */
+        const highlightedCells = [...document.querySelectorAll(".crossword-cell.highlighted")];
+        const firstHighlighted = highlightedCells[0];
+        if (firstHighlighted) {
+          const frame = document.querySelector(".board-frame");
+          frame?.scrollTo({
+            top:0,
+            left:Math.max(0, firstHighlighted.offsetLeft - frame.clientWidth / 2),
+            behavior:"smooth"
+          });
+        }
+      }
       return;
     }
 
@@ -525,6 +541,7 @@
 
   function clearEntryFeedback(number) {
     setEntryFeedback(number, "");
+    document.body.classList.remove("puzzle-solved");
     successPanel.classList.add("hidden");
     showMessage("", "");
   }
@@ -552,6 +569,7 @@
 
     activeEntryIndex = 0;
     activeEntryNumber = puzzle.entries[0].number;
+    document.body.classList.remove("puzzle-solved");
     successPanel.classList.add("hidden");
     showMessage("", "");
     activateEntry(activeEntryNumber, false);

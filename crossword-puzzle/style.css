@@ -614,3 +614,38 @@
     min-height:1.45rem;
   }
 }
+
+
+/* =========================================================
+   v1.6 – הודעת הצלחה שאינה מסתירה את התשבץ
+   ========================================================= */
+
+@media(orientation:landscape) and (max-height:620px){
+  .success-panel{
+    position:static!important;
+    inset:auto!important;
+    width:100%;
+    max-height:none;
+    overflow:visible;
+    margin:7px 0 0!important;
+    padding:8px 12px;
+    border-radius:12px;
+    box-shadow:var(--shadow-sm);
+  }
+
+  .success-panel h2{
+    margin:0 0 2px;
+    font-size:1.3rem;
+  }
+
+  .success-panel p{
+    margin:0;
+    font-size:.84rem;
+    line-height:1.3;
+  }
+
+  /* לאחר הפתרון אין צורך להשאיר את כפתור הבדיקה הגדול */
+  body.puzzle-solved .landscape-actions{
+    display:none;
+  }
+}
