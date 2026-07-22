@@ -25,11 +25,16 @@
 }
 
 .riddle-text p{
-  margin:0;
+  margin:0 0 12px;
   color:var(--ink);
   font-size:clamp(1.05rem,2vw,1.35rem);
   font-weight:600;
-  line-height:1.65;
+  line-height:1.5;
+  text-align:right;
+  padding-right:1.6em;
+  text-indent:-1.6em;
+  overflow-wrap:normal;
+  word-break:normal;
 }
 
 .riddle-text p + p{
@@ -100,9 +105,17 @@
 }
 
 @media(max-width:640px){
-  .answer-row{
-    grid-template-columns:1fr;
+  .riddle-text{width:100%;padding:12px 10px;}
+  .riddle-text p{
+    font-size:1rem;
+    line-height:1.45;
+    padding-right:1.8em;
+    text-indent:-1.8em;
+    margin-bottom:10px;
   }
+  .answer-row{grid-template-columns:1fr;}
+  .answer-row button{width:100%;}
+}
 
   .answer-row button{
     width:100%;
@@ -149,14 +162,4 @@
   #successPanel{
     margin-top:8px;
   }
-}
-
-@media (max-width:640px) and (orientation:portrait){
-.hero h1{font-size:clamp(1.5rem,6.8vw,1.9rem);}
-.riddle-text{padding:12px;}
-.riddle-text p{font-size:.98rem;line-height:1.45;}
-.riddle-text p+p{margin-top:8px;}
-.answer-area{margin-top:14px;}
-.answer-area label{margin-bottom:6px;}
-.answer-row input,.answer-row button{min-height:42px;}
 }
