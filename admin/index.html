@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ניהול משחק | בשביל החוויה</title>
   <link rel="stylesheet" href="../assets/shared.css">
-  <link rel="stylesheet" href="admin-v3.css">
+  <link rel="stylesheet" href="admin-v4.css">
 </head>
 <body>
   <header class="topbar">
@@ -23,6 +23,11 @@
       <label class="field">
         <span>שם המשחק</span>
         <input id="gameName" type="text" value="יום הולדת 50 לרונית" autocomplete="off">
+      </label>
+
+      <label class="field">
+        <span>מיתוג שיודפס על קודי ה־QR</span>
+        <input id="printBranding" type="text" value="50 לרונית" placeholder="למשל: 50 לרונית" autocomplete="off">
       </label>
 
       <label class="field">
@@ -174,6 +179,6 @@
       document.head.appendChild(fallback);
     }
   </script>
-  <script src="admin-v3.js"></script>
+  <script src="admin-v4.js"></script>
 </body>
 </html>
