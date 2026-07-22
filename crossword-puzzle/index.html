@@ -1,1 +1,61 @@
-crossword puzzle engine
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#4f8b3b">
+  <title>תשבץ היגיון</title>
+
+  <link rel="stylesheet" href="../assets/shared.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="brand-header">
+      <img class="brand-logo" src="../assets/logo.png"
+           alt="בשביל החוויה – אירועים בדרך אחרת">
+    </header>
+
+    <section class="hero">
+      <h1 id="gameTitle">תשבץ היגיון</h1>
+      <div id="instructions" class="instructions"></div>
+    </section>
+
+    <section class="puzzle-card crossword-card">
+      <div class="crossword-layout">
+        <section class="board-panel" aria-label="לוח התשבץ">
+          <div class="board-scroll">
+            <div id="crosswordGrid" class="crossword-grid"></div>
+          </div>
+          <p class="board-tip">לחצו על הגדרה או על תא כדי להתחיל להקליד.</p>
+        </section>
+
+        <section class="clues-panel" aria-label="הגדרות התשבץ">
+          <h2 class="card-title">הגדרות</h2>
+          <ol id="cluesList" class="clues-list"></ol>
+        </section>
+      </div>
+
+      <div class="actions">
+        <button id="checkButton" class="btn-primary">בדיקת תשובות</button>
+        <button id="clearButton" class="btn-secondary">ניקוי התשבץ</button>
+      </div>
+
+      <div id="message" class="message" aria-live="polite"></div>
+
+      <section id="successPanel" class="success-panel" aria-live="polite">
+        <h2>כל הכבוד!</h2>
+        <p>פתרתם את התשבץ. הטור הירוק מגלה את התחנה הבאה.</p>
+        <p id="revealedAnswer" class="revealed-answer"></p>
+      </section>
+    </section>
+
+    <footer class="site-footer">
+      © 2026 בשביל החוויה – אירועים בדרך אחרת. כל הזכויות שמורות.
+    </footer>
+  </main>
+
+  <script src="puzzle.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
