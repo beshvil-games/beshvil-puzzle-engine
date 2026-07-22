@@ -630,14 +630,16 @@
   }
 
   function showDataError(error) {
-    console.error(error);
+    console.error("Word-search data error:", error);
 
     ui.grid?.classList.add("hidden");
     ui.reset?.classList.add("hidden");
     ui.progress.textContent = "";
     ui.status.textContent = "";
+
+    /* הודעת שגיאה קטנה בלבד, כדי לא להציג מסגרת גדולה לשחקנים. */
     ui.dataErrorText.textContent =
-      error instanceof Error ? error.message : "שגיאה לא ידועה.";
+      "התפזורת לא נטענה. רעננו את הדף.";
     ui.dataError.classList.remove("hidden");
   }
 })();
