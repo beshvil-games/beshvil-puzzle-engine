@@ -1,0 +1,369 @@
+/* =========================================================
+   Beshvil Puzzle Engine – Gematria
+   העיצוב הכללי מגיע מ־../assets/shared.css
+   ========================================================= */
+
+.gematria-shell{
+  --table-border:rgba(107,73,53,.22);
+}
+
+.gematria-hero .instructions{
+  max-width:850px;
+  margin-inline:auto;
+}
+
+.gematria-card{
+  width:min(100%,980px);
+  margin-inline:auto;
+  align-self:start;
+}
+
+.table-wrap{
+  width:100%;
+  overflow-x:auto;
+  border:1px solid var(--table-border);
+  border-radius:16px;
+  background:#fff;
+  box-shadow:0 5px 16px rgba(71,57,38,.08);
+}
+
+.gematria-table{
+  width:100%;
+  min-width:560px;
+  border-collapse:collapse;
+  table-layout:fixed;
+  direction:rtl;
+}
+
+.question-col{width:auto}
+.number-col{width:150px}
+.letter-col{width:125px}
+
+.gematria-table th,
+.gematria-table td{
+  border-inline-start:1px solid var(--table-border);
+  border-bottom:1px solid var(--table-border);
+  padding:12px;
+  vertical-align:middle;
+}
+
+.gematria-table th:last-child,
+.gematria-table td:last-child{
+  border-inline-start:0;
+}
+
+.gematria-table tbody tr:last-child td{
+  border-bottom:0;
+}
+
+.gematria-table thead th{
+  color:var(--brand-brown-dark);
+  background:var(--brand-green-soft);
+  font-size:clamp(.9rem,1.7vw,1.08rem);
+  font-weight:900;
+  text-align:center;
+}
+
+.question-cell{
+  color:var(--ink);
+  background:#fffdf8;
+  font-size:clamp(.96rem,1.65vw,1.12rem);
+  font-weight:700;
+  line-height:1.45;
+  text-align:right;
+}
+
+.gematria-table tbody tr:nth-child(even) .question-cell,
+.gematria-table tbody tr:nth-child(even) td:not(.question-cell){
+  background:rgba(251,247,237,.55);
+}
+
+.gematria-table tbody tr.is-correct td{
+  background:rgba(46,157,82,.09);
+}
+
+.answer-input{
+  width:100%;
+  min-height:48px;
+  padding:8px;
+  border:2px solid rgba(107,73,53,.24);
+  border-radius:11px;
+  color:var(--ink);
+  background:#fff;
+  text-align:center;
+  font-weight:900;
+  outline:none;
+  transition:border-color .14s ease,background-color .14s ease,box-shadow .14s ease,transform .14s ease;
+}
+
+.number-input{
+  direction:ltr;
+  font-size:1.15rem;
+}
+
+.letter-input{
+  font-size:1.45rem;
+}
+
+.answer-input:focus{
+  border-color:var(--brand-green);
+  box-shadow:0 0 0 4px rgba(79,139,59,.14);
+}
+
+.answer-input.is-correct{
+  border-color:var(--good);
+  background:#edf8ef;
+  color:#1f733b;
+}
+
+.answer-input.is-wrong{
+  border-color:var(--bad);
+  background:#fff0ef;
+  color:#a82925;
+  animation:wrong-shake .25s ease;
+}
+
+.answer-input.is-empty{
+  border-color:#d7a32f;
+  background:#fff9e9;
+}
+
+.game-actions{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-top:16px;
+}
+
+.game-actions .btn{
+  min-width:140px;
+}
+
+.status-text{
+  min-height:1.5em;
+  margin:10px 0 0;
+  text-align:center;
+  font-weight:900;
+}
+
+.status-text.is-good{color:var(--good)}
+.status-text.is-bad{color:var(--bad)}
+
+.gematria-success{
+  margin-top:10px;
+  padding:14px 18px;
+  animation:panel-in .22s ease;
+}
+
+@keyframes wrong-shake{
+  0%,100%{transform:translateX(0)}
+  30%{transform:translateX(-3px)}
+  70%{transform:translateX(3px)}
+}
+
+@keyframes panel-in{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* ---------- טלפון לאורך ---------- */
+
+@media(max-width:640px) and (orientation:portrait){
+  .gematria-shell{
+    gap:7px;
+  }
+
+  .gematria-hero .instructions{
+    margin-top:.3rem;
+    font-size:.86rem;
+    line-height:1.32;
+  }
+
+  .gematria-card{
+    padding:8px;
+  }
+
+  .table-wrap{
+    border-radius:12px;
+  }
+
+  .gematria-table{
+    min-width:0;
+  }
+
+  .number-col{width:74px}
+  .letter-col{width:66px}
+
+  .gematria-table th,
+  .gematria-table td{
+    padding:6px 5px;
+  }
+
+  .gematria-table thead th{
+    font-size:.72rem;
+    line-height:1.15;
+  }
+
+  .question-cell{
+    font-size:.78rem;
+    line-height:1.25;
+  }
+
+  .answer-input{
+    min-height:38px;
+    padding:4px;
+    border-radius:8px;
+  }
+
+  .number-input{font-size:.95rem}
+  .letter-input{font-size:1.15rem}
+
+  .game-actions{
+    margin-top:9px;
+    gap:7px;
+  }
+
+  .game-actions .btn{
+    min-width:0;
+    flex:1;
+    min-height:38px;
+    padding:7px 10px;
+    font-size:.82rem;
+  }
+
+  .status-text{
+    margin-top:6px;
+    font-size:.84rem;
+  }
+
+  .gematria-success{
+    margin-top:6px;
+    padding:10px 12px;
+  }
+}
+
+/* ---------- טלפון לרוחב ---------- */
+
+@media(orientation:landscape) and (max-height:620px){
+  .gematria-shell{
+    width:100%;
+    max-width:none;
+    grid-template-columns:minmax(190px,.72fr) minmax(470px,1.55fr);
+    grid-template-rows:auto 1fr auto;
+    column-gap:12px;
+    row-gap:5px;
+    padding:7px 12px;
+  }
+
+  .gematria-shell .brand-header{
+    grid-column:1 / -1;
+    min-height:30px;
+  }
+
+  .gematria-shell .brand-logo{
+    width:100px;
+  }
+
+  .gematria-hero{
+    grid-column:1;
+    grid-row:2;
+    align-self:center;
+    padding:0 4px;
+  }
+
+  .gematria-hero .game-title{
+    font-size:clamp(1.35rem,3.7vw,2rem);
+  }
+
+  .gematria-hero .game-subtitle{
+    margin-top:.18rem;
+    font-size:.82rem;
+  }
+
+  .gematria-hero .instructions{
+    margin-top:.3rem;
+    font-size:.72rem;
+    line-height:1.25;
+  }
+
+  .gematria-card{
+    grid-column:2;
+    grid-row:2;
+    width:100%;
+    padding:7px 8px;
+  }
+
+  .table-wrap{
+    border-radius:10px;
+  }
+
+  .gematria-table{
+    min-width:0;
+  }
+
+  .number-col{width:88px}
+  .letter-col{width:78px}
+
+  .gematria-table th,
+  .gematria-table td{
+    padding:4px 5px;
+  }
+
+  .gematria-table thead th{
+    font-size:.68rem;
+  }
+
+  .question-cell{
+    font-size:.7rem;
+    line-height:1.18;
+  }
+
+  .answer-input{
+    min-height:31px;
+    padding:2px 4px;
+    border-radius:7px;
+  }
+
+  .number-input{font-size:.82rem}
+  .letter-input{font-size:1rem}
+
+  .game-actions{
+    margin-top:6px;
+    gap:7px;
+  }
+
+  .game-actions .btn{
+    min-width:112px;
+    min-height:30px;
+    padding:4px 9px;
+    font-size:.72rem;
+  }
+
+  .status-text{
+    min-height:1.2em;
+    margin-top:3px;
+    font-size:.72rem;
+  }
+
+  .gematria-success{
+    margin-top:4px;
+    padding:7px 10px;
+  }
+
+  .gematria-success h2{
+    margin-bottom:2px;
+    font-size:1.05rem;
+  }
+
+  .gematria-success p{
+    font-size:.72rem;
+    line-height:1.25;
+  }
+
+  .gematria-shell .site-footer{
+    grid-column:1 / -1;
+    grid-row:3;
+    padding-top:4px;
+    font-size:.68rem;
+  }
+}

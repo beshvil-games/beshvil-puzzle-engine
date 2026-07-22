@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#4f8b3b">
+  <title>חידת גימטריה | בשביל החוויה</title>
+
+  <link rel="stylesheet" href="../assets/shared.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app-shell gematria-shell">
+    <header class="brand-header">
+      <img
+        class="brand-logo"
+        src="../assets/logo.png"
+        alt="בשביל החוויה – אירועים בדרך אחרת">
+    </header>
+
+    <section class="hero gematria-hero" aria-labelledby="gameTitle">
+      <h1 id="gameTitle" class="game-title"></h1>
+      <p id="gameSubtitle" class="game-subtitle"></p>
+      <p id="gameInstructions" class="instructions"></p>
+    </section>
+
+    <section class="game-card gematria-card" aria-label="חידת גימטריה">
+      <div class="table-wrap">
+        <table class="gematria-table">
+          <colgroup>
+            <col class="question-col">
+            <col class="number-col">
+            <col class="letter-col">
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col">השאלה</th>
+              <th scope="col">ערך גימטרי</th>
+              <th scope="col">אות עברית</th>
+            </tr>
+          </thead>
+          <tbody id="questionsBody"></tbody>
+        </table>
+      </div>
+
+      <div class="game-actions">
+        <button id="checkButton" class="btn btn-primary" type="button">בדיקה</button>
+        <button id="resetButton" class="btn btn-secondary" type="button">התחלה מחדש</button>
+      </div>
+
+      <p id="statusText" class="status-text" aria-live="polite" aria-atomic="true"></p>
+
+      <section id="successPanel" class="success-panel gematria-success hidden" aria-live="polite">
+        <h2 id="successTitle"></h2>
+        <p id="successMessage"></p>
+      </section>
+
+      <section id="dataError" class="data-error hidden" role="alert">
+        <h2>לא ניתן לפתוח את החידה</h2>
+        <p id="dataErrorText"></p>
+      </section>
+    </section>
+
+    <footer class="site-footer">
+      © 2026 בשביל החוויה – אירועים בדרך אחרת. כל הזכויות שמורות.
+    </footer>
+  </main>
+
+  <script src="puzzle-data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
