@@ -437,3 +437,41 @@
 
   .actions{display:none;}
 }
+
+
+/* =========================================================
+   v1.4 – מצב פתרון, Enter בנייד, תצוגת רוחב יציבה
+   ========================================================= */
+.mobile-check-button{display:none;width:100%;margin-top:8px;}
+
+/* ירוק בהיר = נפתר; מסגרת חומה = פעיל כרגע */
+.clue-item.correct{background:#e8f4e3;border-color:var(--good);}
+.clue-item.active{box-shadow:0 0 0 3px rgba(107,73,53,.42);}
+.clue-item.correct.active{background:#e8f4e3;border-color:var(--good);}
+.crossword-cell.active-entry{box-shadow:inset 0 0 0 2px rgba(107,73,53,.55);}
+.crossword-cell.correct{background:#e8f4e3;}
+.crossword-cell.highlighted.correct{background:var(--brand-green);}
+
+@media(orientation:landscape) and (max-height:620px){
+  .mobile-check-button{display:block;}
+  .actions{display:none!important;}
+
+  /* ההגדרה הפעילה נשארת מול העיניים גם כשהמקלדת נפתחת */
+  body.keyboard-open .clues-panel{
+    position:fixed;
+    top:6px;
+    right:8px;
+    width:min(48vw,520px);
+    z-index:1000;
+    padding:8px;
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:rgba(255,253,248,.98);
+    box-shadow:var(--shadow-md);
+  }
+
+  body.keyboard-open .clues-panel .card-title{display:none;}
+  body.keyboard-open .mobile-clue-counter{margin-bottom:4px;}
+  body.keyboard-open .mobile-clue-card{min-height:52px;padding:8px 10px;font-size:.86rem;}
+  body.keyboard-open .mobile-check-button{min-height:38px;padding:7px 10px;margin-top:5px;}
+}

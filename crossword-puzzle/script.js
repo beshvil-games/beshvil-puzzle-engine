@@ -13,6 +13,7 @@
   const mobileCluePosition = document.getElementById("mobileCluePosition");
   const prevClueButton = document.getElementById("prevClueButton");
   const nextClueButton = document.getElementById("nextClueButton");
+  const mobileCheckButton = document.getElementById("mobileCheckButton");
 
   if (!puzzle || !Array.isArray(puzzle.entries) || !puzzle.entries.length) {
     showMessage("קובץ נתוני התשבץ לא נטען.", "error");
@@ -42,6 +43,7 @@
   window.addEventListener("resize", resizeBoard);
   window.addEventListener("orientationchange", () => setTimeout(resizeBoard, 140));
   window.visualViewport?.addEventListener("resize", handleViewportResize);
+  mobileCheckButton?.addEventListener("click", checkAnswers);
 
   function renderGrid() {
     const occupied = new Map();
@@ -157,6 +159,15 @@
     activateEntry(entry.number, true);
   }
 
+  function moveClueForReading(direction) {
+    activeEntryIndex =
+      (activeEntryIndex + direction + puzzle.entries.length) % puzzle.entries.length;
+    const entry = puzzle.entries[activeEntryIndex];
+    activateEntry(entry.number, false);
+    const clue = document.querySelector(`.clue-item[data-number="${entry.number}"]`);
+    clue?.scrollIntoView({behavior:"smooth", block:"center"});
+  }
+
   function updateMobileClue() {
     const entry = puzzle.entries[activeEntryIndex];
     if (!entry || !mobileClueCard || !mobileCluePosition) return;
@@ -190,6 +201,9 @@
   }
 
   function handleViewportResize() {
+    const viewportHeight = window.visualViewport?.height || window.innerHeight;
+    const keyboardOpen = viewportHeight < window.innerHeight * .72;
+    document.body.classList.toggle("keyboard-open", keyboardOpen);
     resizeBoard();
 
     const focused = document.activeElement;
@@ -273,6 +287,8 @@
       }
     });
 
+    updateEntrySolvedState(entry);
+
     if (lastIndex < entry.answer.length - 1) {
       focusCell(entry.number, lastIndex + 1, false);
     } else {
@@ -328,7 +344,13 @@
 
     if (event.key === "Enter") {
       event.preventDefault();
-      moveClue(1);
+      const portraitPhone = window.matchMedia("(max-width:760px) and (orientation:portrait)").matches;
+      if (portraitPhone) {
+        event.target.blur();
+        moveClueForReading(1);
+      } else {
+        moveClue(1);
+      }
     }
   }
 
@@ -436,6 +458,14 @@
     setEntryFeedback(number, "");
     successPanel.classList.add("hidden");
     showMessage("", "");
+  }
+
+  function updateEntrySolvedState(entry) {
+    const typed = getTypedAnswer(entry);
+    const isComplete = typed.length === entry.answer.length;
+    const isCorrect = isComplete &&
+      normalizeFinalLetters(typed) === normalizeFinalLetters(entry.answer);
+    setEntryFeedback(entry.number, isCorrect ? "correct" : "");
   }
 
   function clearPuzzle() {
