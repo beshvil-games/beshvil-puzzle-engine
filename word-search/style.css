@@ -1,0 +1,247 @@
+/* =========================================================
+   Beshvil Puzzle Engine – Word Search
+   עיצוב ייעודי למנוע תפזורת
+   ========================================================= */
+
+body{
+  overscroll-behavior-y:contain;
+}
+
+.word-search-card{
+  width:min(100%,780px);
+  margin-inline:auto;
+}
+
+.game-toolbar{
+  min-height:46px;
+  margin-bottom:12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.progress-text{
+  margin:0;
+  color:var(--brand-brown);
+  font-size:clamp(1rem,2vw,1.2rem);
+  font-weight:900;
+}
+
+.reset-button{
+  flex:0 0 auto;
+  min-height:40px;
+  padding:8px 14px;
+  font-size:.9rem;
+}
+
+.grid-stage{
+  width:100%;
+  display:flex;
+  justify-content:center;
+  direction:ltr;
+}
+
+.letter-grid{
+  --rows:11;
+  --cols:11;
+  width:min(100%,630px,72vh);
+  aspect-ratio:var(--cols) / var(--rows);
+  display:grid;
+  grid-template-columns:repeat(var(--cols),minmax(0,1fr));
+  grid-template-rows:repeat(var(--rows),minmax(0,1fr));
+  gap:clamp(2px,.45vw,5px);
+  padding:clamp(4px,.75vw,8px);
+  border:2px solid rgba(79,139,59,.36);
+  border-radius:18px;
+  background:rgba(79,139,59,.08);
+  box-shadow:inset 0 2px 8px rgba(71,57,38,.08);
+  touch-action:none;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-touch-callout:none;
+  cursor:crosshair;
+}
+
+.letter-cell{
+  position:relative;
+  min-width:0;
+  min-height:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  border:1px solid rgba(107,73,53,.20);
+  border-radius:clamp(5px,.8vw,9px);
+  color:var(--ink);
+  background:#fffdf8;
+  box-shadow:0 1px 3px rgba(71,57,38,.08);
+  font-size:clamp(.95rem,3.2vw,1.85rem);
+  line-height:1;
+  font-weight:900;
+  transition:
+    background-color .12s ease,
+    color .12s ease,
+    border-color .12s ease,
+    box-shadow .12s ease,
+    transform .12s ease,
+    opacity .18s ease;
+}
+
+.letter-cell.is-selecting{
+  z-index:1;
+  color:var(--brand-green-dark);
+  background:#dcefd3;
+  border-color:rgba(79,139,59,.68);
+  box-shadow:inset 0 0 0 2px rgba(79,139,59,.42);
+  transform:scale(.96);
+}
+
+.letter-cell.is-found{
+  color:#fff;
+  background:var(--brand-green);
+  border-color:var(--brand-green-dark);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.24);
+}
+
+/* אות שמשתתפת בשתי מילים נשארת מסומנת באופן רגיל. */
+.letter-cell.is-found.is-selecting{
+  color:#fff;
+  background:var(--brand-green-dark);
+}
+
+.letter-cell.is-wrong{
+  color:#fff;
+  background:var(--bad);
+  border-color:#b83e3a;
+  animation:wrong-shake .28s ease;
+}
+
+/* בסיום: המילים שנמצאו נחלשות והאותיות שנותרו מודגשות. */
+.letter-cell.is-complete-found{
+  opacity:.28;
+}
+
+.letter-cell.is-remaining{
+  color:#fff;
+  background:#a72bc4;
+  border-color:#7e1898;
+  box-shadow:0 2px 7px rgba(126,24,152,.28);
+}
+
+.status-text{
+  min-height:1.45em;
+  margin:10px 0 0;
+}
+
+.success-panel{
+  margin-top:14px;
+}
+
+.data-error{
+  margin-top:14px;
+  padding:16px;
+  border:2px solid rgba(217,83,79,.35);
+  border-radius:var(--radius-md);
+  background:#fff7f6;
+  text-align:center;
+}
+
+.data-error h2{
+  margin:0 0 7px;
+  color:var(--bad);
+  font-size:1.35rem;
+}
+
+.data-error p{
+  margin:0;
+  color:var(--brand-brown);
+  font-weight:700;
+}
+
+@keyframes wrong-shake{
+  0%,100%{transform:translateX(0)}
+  30%{transform:translateX(-3px)}
+  70%{transform:translateX(3px)}
+}
+
+@media(max-width:640px) and (orientation:portrait){
+  .word-search-card{
+    padding:9px;
+  }
+
+  .game-toolbar{
+    min-height:38px;
+    margin-bottom:7px;
+  }
+
+  .progress-text{
+    font-size:.95rem;
+  }
+
+  .reset-button{
+    min-height:36px;
+    padding:6px 10px;
+    font-size:.78rem;
+  }
+
+  .letter-grid{
+    width:min(100%,94vw);
+    gap:2px;
+    padding:3px;
+    border-radius:13px;
+  }
+
+  .letter-cell{
+    border-radius:5px;
+    font-size:clamp(.9rem,5vw,1.35rem);
+  }
+
+  .status-text{
+    font-size:.9rem;
+  }
+}
+
+@media(orientation:landscape) and (max-height:620px){
+  .word-search-card{
+    width:min(100%,900px);
+    padding:8px 12px;
+  }
+
+  .game-toolbar{
+    min-height:32px;
+    margin-bottom:4px;
+  }
+
+  .progress-text{
+    font-size:.88rem;
+  }
+
+  .reset-button{
+    min-height:31px;
+    padding:4px 9px;
+    font-size:.74rem;
+  }
+
+  .letter-grid{
+    width:min(69vh,560px);
+    gap:2px;
+    padding:3px;
+    border-radius:12px;
+  }
+
+  .letter-cell{
+    border-radius:4px;
+    font-size:clamp(.82rem,3.55vh,1.3rem);
+  }
+
+  .status-text{
+    margin-top:4px;
+    font-size:.8rem;
+  }
+
+  .success-panel{
+    margin-top:6px;
+    padding:9px 13px;
+  }
+}
