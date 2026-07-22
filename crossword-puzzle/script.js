@@ -62,7 +62,7 @@
 
         if (col === puzzle.highlightColumn) wrapper.classList.add("highlighted");
 
-        if (info.index === info.entry.answer.length - 1) {
+        if (info.index === 0) {
           const number = document.createElement("span");
           number.className = "cell-number";
           number.textContent = info.entry.number;
@@ -226,14 +226,14 @@
       return;
     }
 
-    if (event.key === "ArrowLeft" && index > 0) {
-      event.preventDefault();
-      focusCell(entry.number, index - 1, false);
-    }
-
-    if (event.key === "ArrowRight" && index < entry.answer.length - 1) {
+    if (event.key === "ArrowLeft" && index < entry.answer.length - 1) {
       event.preventDefault();
       focusCell(entry.number, index + 1, false);
+    }
+
+    if (event.key === "ArrowRight" && index > 0) {
+      event.preventDefault();
+      focusCell(entry.number, index - 1, false);
     }
 
     if (event.key === "Home") {

@@ -38,7 +38,7 @@
   width:max-content;
   margin-inline:auto;
   gap:0;
-  direction:ltr;
+  direction:rtl;
   touch-action:manipulation;
   user-select:none;
 }
