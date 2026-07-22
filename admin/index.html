@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ניהול משחק | בשביל החוויה</title>
   <link rel="stylesheet" href="../assets/shared.css">
-  <link rel="stylesheet" href="admin-v2.css">
+  <link rel="stylesheet" href="admin-v3.css">
 </head>
 <body>
   <header class="topbar">
@@ -26,6 +26,16 @@
       </label>
 
       <label class="field">
+        <span>שם שיודפס על QR הסיום</span>
+        <input id="finalQrTitle" type="text" value="סיום" autocomplete="off">
+      </label>
+
+      <label class="field">
+        <span>מיקום הדבקת QR הסיום – למפיק</span>
+        <input id="finalQrPlacement" type="text" placeholder="למשל: על שולחן המתנות" autocomplete="off">
+      </label>
+
+      <label class="field">
         <span>מיקום הסיום</span>
         <input id="finalLocation" type="text" placeholder="למשל: רחבת הדשא" autocomplete="off">
       </label>
@@ -36,8 +46,7 @@
       </label>
 
       <p class="hint">
-        הודעת הסיום נשמרת כרגע במסך הניהול בלבד. לאחר שנחליט מה יקרה בסוף,
-        נחבר אותה לחידה האחרונה.
+        QR הסיום ייווצר יחד עם שאר הקודים. כרגע הוא מוביל לדף סיום ייעודי.
       </p>
     </section>
 
@@ -51,12 +60,12 @@
       </div>
 
       <div class="column-headings" aria-hidden="true">
-        <span></span>
-        <span></span>
-        <span></span>
+        <span></span><span></span><span></span>
         <span>סוג החידה</span>
-        <span>לאן מוביל כתב החידה</span>
-        <span>מיקום הדבקת ה־QR</span>
+        <span>פתרון החידה</span>
+        <span>לאן הפתרון מוביל</span>
+        <span>שם שיודפס על ה־QR</span>
+        <span>מיקום הדבקה – למפיק</span>
         <span></span>
       </div>
 
@@ -74,7 +83,7 @@
       <div class="section-heading">
         <div>
           <h2>קודי ה־QR למשחק</h2>
-          <p>בהדפסה יופיעו רק מיקום ההדבקה וקוד ה־QR.</p>
+          <p>בהדפסה יופיעו רק השם הקצר וקוד ה־QR.</p>
         </div>
         <div class="section-buttons">
           <button id="productionPrintButton" class="button secondary" type="button">הדפסת דף הפקה</button>
@@ -101,8 +110,10 @@
           <tr>
             <th>סדר</th>
             <th>סוג החידה</th>
-            <th>לאן מוביל כתב החידה</th>
-            <th>מיקום הדבקת ה־QR</th>
+            <th>פתרון החידה</th>
+            <th>לאן הפתרון מוביל</th>
+            <th>שם על ה־QR</th>
+            <th>מיקום הדבקה למפיק</th>
           </tr>
         </thead>
         <tbody id="productionBody"></tbody>
@@ -113,7 +124,6 @@
   <template id="puzzleItemTemplate">
     <li class="puzzle-item" draggable="true">
       <div class="drag-handle" title="גרירה" aria-hidden="true">☰</div>
-
       <div class="station-number" aria-label="מספר תחנה"></div>
 
       <label class="toggle-wrap">
@@ -125,13 +135,23 @@
       <strong class="puzzle-type"></strong>
 
       <label>
-        <span class="sr-only">לאן מוביל כתב החידה</span>
-        <input class="destination-input" type="text" placeholder="למשל: עץ האלון">
+        <span class="sr-only">פתרון החידה</span>
+        <input class="solution-input" type="text" placeholder="למשל: כרתים מדגסקר הונשו">
       </label>
 
       <label>
-        <span class="sr-only">מיקום הדבקת ה־QR</span>
-        <input class="qr-location-input" type="text" placeholder="למשל: ליד שער הכניסה">
+        <span class="sr-only">לאן הפתרון מוביל</span>
+        <input class="destination-input" type="text" placeholder="למשל: האי במטבח">
+      </label>
+
+      <label>
+        <span class="sr-only">שם שיודפס על ה־QR</span>
+        <input class="qr-title-input" type="text" placeholder="למשל: כדורסל">
+      </label>
+
+      <label>
+        <span class="sr-only">מיקום הדבקת ה־QR למפיק</span>
+        <input class="qr-placement-input" type="text" placeholder="למשל: לוח הכדורסל למעלה">
       </label>
 
       <div class="row-actions">
@@ -154,6 +174,6 @@
       document.head.appendChild(fallback);
     }
   </script>
-  <script src="admin-v2.js"></script>
+  <script src="admin-v3.js"></script>
 </body>
 </html>
